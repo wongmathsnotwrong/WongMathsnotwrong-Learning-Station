@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WongMaths Learning Station - Interactive Learning</title>
+    <title>WongMaths Learning Station</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -11,44 +11,38 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f3f4f6;
-        }
-        .gradient-text {
-            background: linear-gradient(to right, #4f46e5, #9333ea);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        .modal {
-            transition: opacity 0.3s ease-in-out;
-            opacity: 0;
-            pointer-events: none;
-        }
-        .modal.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
+        .gradient-text { background: linear-gradient(to right, #4f46e5, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        
+        /* Menu Active State */
+        .menu-btn.active { background-color: #ede9fe; color: #6d28d9; border-color: #6d28d9; }
     </style>
 </head>
 <body class="text-gray-800 min-h-screen flex flex-col">
 
-    <!-- Navbar -->
+    <!-- Navbar (Sticky Menu) -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <i class="fa-solid fa-square-root-variable text-3xl text-indigo-600 mr-3"></i>
-                    <h1 class="text-2xl font-bold tracking-tight gradient-text">WongMaths Learning Station</h1>
+            <div class="flex flex-col sm:flex-row justify-between h-auto sm:h-20 py-3 sm:py-0">
+                
+                <!-- Left: Logo -->
+                <div class="flex items-center justify-center sm:justify-start mb-4 sm:mb-0">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm mr-3 shadow-md border-2 border-white ring-2 ring-indigo-100 flex-shrink-0">
+                        WM
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight gradient-text cursor-pointer" onclick="filterGroup('all')">WongMaths Station</h1>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <button onclick="toggleView()" id="viewToggleBtn" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg font-medium hover:bg-indigo-200 transition duration-300 flex items-center">
-                        <i class="fa-solid fa-chalkboard-user mr-2"></i>
-                        <span>Switch to Teacher Mode</span>
+
+                <!-- Right: The 2 Menu Items -->
+                <div class="flex items-center justify-center space-x-2 sm:space-x-4">
+                    <button onclick="filterGroup('wong')" id="btn-wong" class="menu-btn px-4 py-2 rounded-lg border border-transparent font-semibold text-gray-600 hover:bg-gray-50 transition flex items-center">
+                        <i class="fa-solid fa-folder-open mr-2 text-yellow-500"></i>
+                        Wong'Sources
+                    </button>
+                    <button onclick="filterGroup('online')" id="btn-online" class="menu-btn px-4 py-2 rounded-lg border border-transparent font-semibold text-gray-600 hover:bg-gray-50 transition flex items-center">
+                        <i class="fa-solid fa-globe mr-2 text-blue-500"></i>
+                        Online Resources
                     </button>
                 </div>
             </div>
@@ -63,31 +57,21 @@
             <div class="absolute top-0 right-0 -mt-10 -mr-10 opacity-20">
                 <i class="fa-solid fa-shapes text-9xl"></i>
             </div>
-            <h2 id="welcomeTitle" class="text-3xl font-bold mb-2">Welcome, Students!</h2>
-            <p id="welcomeDesc" class="text-indigo-100 text-lg max-w-2xl">Explore our curated collection of interactive math games designed to boost your skills in algebra, geometry, and calculus.</p>
+            <h2 id="pageTitle" class="text-3xl font-bold mb-2">Welcome, Students!</h2>
+            <p id="pageDesc" class="text-indigo-100 text-lg max-w-2xl">Select a category from the menu above to start learning.</p>
         </div>
 
-        <!-- Toolbar (Teacher Only) -->
-        <div id="teacherToolbar" class="hidden mb-8 flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <div>
-                <h3 class="font-bold text-lg text-gray-700"><i class="fa-solid fa-gear mr-2 text-gray-400"></i>Manage Resources</h3>
-                <p class="text-sm text-gray-500">Add, edit, or remove game links.</p>
-            </div>
-            <button onclick="openModal()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow-md transition duration-300 flex items-center">
-                <i class="fa-solid fa-plus mr-2"></i> Add New Game
-            </button>
-        </div>
-
-        <!-- Filter/Search (Both Views) -->
+        <!-- Sub-Filter/Search (Filters within the selected group) -->
         <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
             <div class="relative w-full sm:w-96">
-                <input type="text" id="searchInput" onkeyup="filterGames()" placeholder="Search topics (e.g., Algebra)..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm">
+                <input type="text" id="searchInput" onkeyup="renderGames()" placeholder="Search title..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
             </div>
-            <div class="flex gap-2">
-                <button onclick="filterCategory('all')" class="px-4 py-1 rounded-full bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition">All</button>
-                <button onclick="filterCategory('Algebra')" class="px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition">Algebra</button>
-                <button onclick="filterCategory('Geometry')" class="px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition">Geometry</button>
+            <!-- Topic Tags -->
+            <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
+                <button onclick="filterCategory('all')" class="cat-btn px-4 py-1 rounded-full bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition whitespace-nowrap">All Topics</button>
+                <button onclick="filterCategory('Algebra')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">Algebra</button>
+                <button onclick="filterCategory('Geometry')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">Geometry</button>
             </div>
         </div>
 
@@ -96,252 +80,179 @@
             <!-- Game cards will be injected here by JS -->
         </div>
 
-        <!-- Empty State (Hidden by default) -->
+        <!-- Empty State -->
         <div id="emptyState" class="hidden text-center py-20">
             <div class="inline-block p-6 rounded-full bg-gray-100 mb-4">
-                <i class="fa-regular fa-folder-open text-4xl text-gray-400"></i>
+                <i class="fa-solid fa-box-open text-4xl text-gray-400"></i>
             </div>
-            <h3 class="text-xl font-medium text-gray-600">No games found</h3>
-            <p class="text-gray-500 mt-2">Try adjusting your search or add a new resource.</p>
+            <h3 class="text-xl font-medium text-gray-600">No resources found</h3>
+            <p class="text-gray-500 mt-2">Try switching tabs or searching for something else.</p>
         </div>
     </main>
 
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 mt-auto">
         <div class="max-w-7xl mx-auto py-8 px-4 text-center">
-            <p class="text-gray-500 text-sm">© 2025 WongMaths Learning Station. Created for Secondary Mathematics.</p>
+            <p class="text-gray-500 text-sm">© 2025 WongMaths Learning Station.</p>
         </div>
     </footer>
 
-    <!-- Add/Edit Modal -->
-    <div id="gameModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-100">
-            <div class="flex justify-between items-center mb-6">
-                <h3 id="modalTitle" class="text-xl font-bold text-gray-800">Add New Resource</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
-            </div>
-            
-            <form id="gameForm" onsubmit="handleFormSubmit(event)">
-                <input type="hidden" id="editId">
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                        <input type="text" id="gameTitle" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g., Graphing Calculator">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <select id="gameCategory" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            <option value="General">General</option>
-                            <option value="Algebra">Algebra</option>
-                            <option value="Geometry">Geometry</option>
-                            <option value="Calculus">Calculus</option>
-                            <option value="Statistics">Statistics</option>
-                            <option value="Logic">Logic & Puzzle</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
-                        <input type="url" id="gameUrl" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="https://...">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea id="gameDesc" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Brief description of the activity..."></textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Thumbnail Icon</label>
-                        <div class="grid grid-cols-5 gap-2 mt-2">
-                            <button type="button" onclick="selectIcon('fa-calculator')" class="icon-btn p-2 rounded-lg border border-gray-200 hover:bg-indigo-50 text-center"><i class="fa-solid fa-calculator text-indigo-600"></i></button>
-                            <button type="button" onclick="selectIcon('fa-chart-pie')" class="icon-btn p-2 rounded-lg border border-gray-200 hover:bg-indigo-50 text-center"><i class="fa-solid fa-chart-pie text-green-600"></i></button>
-                            <button type="button" onclick="selectIcon('fa-shapes')" class="icon-btn p-2 rounded-lg border border-gray-200 hover:bg-indigo-50 text-center"><i class="fa-solid fa-shapes text-purple-600"></i></button>
-                            <button type="button" onclick="selectIcon('fa-ruler-combined')" class="icon-btn p-2 rounded-lg border border-gray-200 hover:bg-indigo-50 text-center"><i class="fa-solid fa-ruler-combined text-orange-600"></i></button>
-                            <button type="button" onclick="selectIcon('fa-cube')" class="icon-btn p-2 rounded-lg border border-gray-200 hover:bg-indigo-50 text-center"><i class="fa-solid fa-cube text-blue-600"></i></button>
-                        </div>
-                        <input type="hidden" id="selectedIcon" value="fa-calculator">
-                    </div>
-                </div>
-
-                <div class="mt-8 flex gap-3">
-                    <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">Cancel</button>
-                    <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">Save Resource</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Login Modal -->
-    <div id="loginModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 transform transition-all scale-100">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800">Teacher Access</h3>
-                <button onclick="closeLoginModal()" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
-            </div>
-            
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                        <input type="text" id="usernameInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Enter username">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input type="password" id="passwordInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Enter password">
-                    </div>
-                    <p id="loginError" class="text-red-500 text-sm hidden"><i class="fa-solid fa-circle-exclamation mr-1"></i> Invalid credentials</p>
-                </div>
-
-                <div class="mt-6">
-                    <button type="submit" class="w-full px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">Login</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 transition-transform duration-300 z-50 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg flex items-center">
-        <i class="fa-solid fa-check-circle text-green-400 mr-3"></i>
-        <span id="toastMsg">Action successful</span>
-    </div>
-
     <script>
-        // --- Data Management ---
-        const defaultGames = [
-            { id: 1, title: 'Desmos Graphing', category: 'Algebra', url: 'https://www.desmos.com/calculator', desc: 'Powerful graphing calculator for visualizing functions.', icon: 'fa-calculator', iconColor: 'text-indigo-600' },
-            { id: 2, title: 'GeoGebra Geometry', category: 'Geometry', url: 'https://www.geogebra.org/geometry', desc: 'Create and explore geometric constructions interactively.', icon: 'fa-shapes', iconColor: 'text-purple-600' },
-            { id: 3, title: 'Math is Fun', category: 'General', url: 'https://www.mathsisfun.com/', desc: 'Simple explanations and puzzles for various topics.', icon: 'fa-cube', iconColor: 'text-blue-600' },
-            { id: 4, title: 'Khan Academy', category: 'General', url: 'https://www.khanacademy.org/math', desc: 'Video lessons and practice exercises.', icon: 'fa-graduation-cap', iconColor: 'text-green-600' }
+        // ==========================================
+        // TEACHER: EDIT THIS SECTION TO UPDATE GAMES
+        // ==========================================
+        
+        // Note: 'group' determines which menu tab the item appears in:
+        // 'online' -> Online Resources (Desmos, Khan, etc.)
+        // 'wong'   -> Wong'Sources (Your uploads)
+
+        const gamesData = [
+            // --- ONLINE RESOURCES ---
+            { 
+                title: 'Desmos Graphing', 
+                group: 'online',
+                category: 'Algebra', 
+                url: 'https://www.desmos.com/calculator', 
+                desc: 'Powerful graphing calculator for visualizing functions.', 
+                icon: 'fa-calculator', 
+                iconColor: 'text-indigo-600' 
+            },
+            { 
+                title: 'GeoGebra Geometry', 
+                group: 'online',
+                category: 'Geometry', 
+                url: 'https://www.geogebra.org/geometry', 
+                desc: 'Create and explore geometric constructions interactively.', 
+                icon: 'fa-shapes', 
+                iconColor: 'text-purple-600' 
+            },
+            { 
+                title: 'Math is Fun', 
+                group: 'online',
+                category: 'General', 
+                url: 'https://www.mathsisfun.com/', 
+                desc: 'Simple explanations and puzzles for various topics.', 
+                icon: 'fa-cube', 
+                iconColor: 'text-blue-600' 
+            },
+            { 
+                title: 'Khan Academy', 
+                group: 'online',
+                category: 'General', 
+                url: 'https://www.khanacademy.org/math', 
+                desc: 'Video lessons and practice exercises.', 
+                icon: 'fa-graduation-cap', 
+                iconColor: 'text-green-600' 
+            },
+            { 
+                title: 'Wolfram Alpha', 
+                group: 'online',
+                category: 'Calculus', 
+                url: 'https://www.wolframalpha.com/', 
+                desc: 'Computational intelligence for complex math problems.', 
+                icon: 'fa-brain', 
+                iconColor: 'text-orange-500' 
+            },
+
+            // --- WONG'SOURCES (Add your own resources below here) ---
+            { 
+                title: 'Conditions for Congruent Triangles Quiz', 
+                group: 'wong',
+                category: 'Geometry', 
+                url: 'https://wongmathsnotwrong.github.io/Conditions-for-Congruent-Triangles-Quiz/', 
+                desc: 'An interactive quiz to test your understanding of triangle congruence conditions.', 
+                icon: 'fa-clipboard-question', 
+                iconColor: 'text-yellow-600' 
+            }
         ];
 
-        let games = JSON.parse(localStorage.getItem('mathGames')) || defaultGames;
-        let isTeacherMode = false;
-        let currentIcon = 'fa-calculator';
+        // ==========================================
+        // END OF EDITABLE SECTION
+        // ==========================================
 
-        // --- Core Functions ---
+        let currentGroup = 'all'; // 'all', 'wong', 'online'
+        let currentCategory = 'all'; // 'all', 'Algebra', 'Geometry', etc.
 
-        function saveGames() {
-            localStorage.setItem('mathGames', JSON.stringify(games));
-            renderGames();
-        }
-
-        function toggleView() {
-            if (isTeacherMode) {
-                // Currently teacher, switch to student immediately
-                isTeacherMode = false;
-                updateViewInterface();
-            } else {
-                // Currently student, show login to switch to teacher
-                openLoginModal();
-            }
-        }
-        
-        function updateViewInterface() {
-            const btn = document.getElementById('viewToggleBtn');
-            const toolbar = document.getElementById('teacherToolbar');
-            const welcomeTitle = document.getElementById('welcomeTitle');
-            const welcomeDesc = document.getElementById('welcomeDesc');
-
-            if (isTeacherMode) {
-                btn.innerHTML = '<i class="fa-solid fa-glasses mr-2"></i><span>Switch to Student Mode</span>';
-                btn.classList.remove('bg-indigo-100', 'text-indigo-700');
-                btn.classList.add('bg-gray-200', 'text-gray-800');
-                
-                toolbar.classList.remove('hidden');
-                welcomeTitle.textContent = "Teacher Dashboard";
-                welcomeDesc.textContent = "Manage your classroom resources. Changes are saved automatically.";
-                document.body.classList.add('border-t-4', 'border-indigo-600'); 
-            } else {
-                btn.innerHTML = '<i class="fa-solid fa-chalkboard-user mr-2"></i><span>Switch to Teacher Mode</span>';
-                btn.classList.add('bg-indigo-100', 'text-indigo-700');
-                btn.classList.remove('bg-gray-200', 'text-gray-800');
-
-                toolbar.classList.add('hidden');
-                welcomeTitle.textContent = "Welcome, Students!";
-                welcomeDesc.textContent = "Explore our curated collection of interactive math games designed to boost your skills.";
-                document.body.classList.remove('border-t-4', 'border-indigo-600');
-            }
-            renderGames();
-        }
-
-        // New Login Functions
-        function openLoginModal() {
-            document.getElementById('loginModal').classList.add('active');
-            document.getElementById('loginForm').reset();
-            document.getElementById('loginError').classList.add('hidden');
-        }
-
-        function closeLoginModal() {
-            document.getElementById('loginModal').classList.remove('active');
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const u = document.getElementById('usernameInput').value;
-            const p = document.getElementById('passwordInput').value;
+        function filterGroup(group) {
+            currentGroup = group;
             
-            // Updated username check to "wkh"
-            if (u === "wkh" && p === "King2704") {
-                isTeacherMode = true;
-                updateViewInterface();
-                closeLoginModal();
-                showToast('Welcome, Teacher!');
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
+            // Update UI Buttons
+            document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active', 'bg-indigo-50', 'text-indigo-700', 'border-indigo-200'));
+            
+            if(group !== 'all') {
+                const activeBtn = document.getElementById('btn-' + group);
+                if(activeBtn) activeBtn.classList.add('active');
             }
+
+            // Update Banner Text
+            const title = document.getElementById('pageTitle');
+            const desc = document.getElementById('pageDesc');
+            
+            if (group === 'wong') {
+                title.textContent = "Wong'Sources";
+                desc.textContent = "Exclusive resources, notes, and quizzes created by Mr. Wong.";
+            } else if (group === 'online') {
+                title.textContent = "Online Resources";
+                desc.textContent = "Trusted external tools like Desmos, GeoGebra, and Khan Academy.";
+            } else {
+                title.textContent = "Welcome, Students!";
+                desc.textContent = "Select a category from the menu above to start learning.";
+            }
+
+            renderGames();
         }
 
-        function renderGames(filterText = '', category = 'all') {
+        function filterCategory(cat) {
+            currentCategory = cat;
+            
+            // Update UI Buttons
+            const buttons = document.querySelectorAll('.cat-btn');
+            buttons.forEach(btn => {
+                if (btn.textContent.includes(cat === 'all' ? 'All' : cat)) {
+                    btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+                    btn.classList.add('bg-indigo-600', 'text-white');
+                } else {
+                    btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+                    btn.classList.remove('bg-indigo-600', 'text-white');
+                }
+            });
+            renderGames();
+        }
+
+        function renderGames() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
             const grid = document.getElementById('gamesGrid');
             const emptyState = document.getElementById('emptyState');
             grid.innerHTML = '';
 
-            const filteredGames = games.filter(game => {
-                const matchesText = game.title.toLowerCase().includes(filterText.toLowerCase()) || 
-                                  game.category.toLowerCase().includes(filterText.toLowerCase());
-                const matchesCategory = category === 'all' || game.category === category;
-                return matchesText && matchesCategory;
+            const filteredGames = gamesData.filter(game => {
+                // Filter by Group (Menu Tab)
+                const matchesGroup = currentGroup === 'all' || game.group === currentGroup;
+                
+                // Filter by Category (Sub-buttons)
+                const matchesCategory = currentCategory === 'all' || game.category === currentCategory;
+                
+                // Filter by Search Text
+                const matchesSearch = game.title.toLowerCase().includes(searchText) || 
+                                    game.desc.toLowerCase().includes(searchText);
+
+                return matchesGroup && matchesCategory && matchesSearch;
             });
 
             if (filteredGames.length === 0) {
                 emptyState.classList.remove('hidden');
-                return;
             } else {
                 emptyState.classList.add('hidden');
             }
 
             filteredGames.forEach(game => {
                 const card = document.createElement('div');
-                card.className = `bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-full card-hover transition duration-300 relative group`;
+                card.className = `bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-full card-hover transition duration-300 group`;
                 
-                let actionButtons = '';
-                if (isTeacherMode) {
-                    actionButtons = `
-                        <div class="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="editGame(${game.id})" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition" title="Edit">
-                                <i class="fa-solid fa-pen text-xs"></i>
-                            </button>
-                            <button onclick="deleteGame(${game.id})" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-red-100 text-red-600 flex items-center justify-center transition" title="Delete">
-                                <i class="fa-solid fa-trash text-xs"></i>
-                            </button>
-                        </div>
-                    `;
-                }
-
-                // Default color if not stored
-                const iconColor = game.iconColor || 'text-indigo-600';
-
                 card.innerHTML = `
-                    ${actionButtons}
                     <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center text-2xl ${iconColor} mr-4">
-                            <i class="${game.icon}"></i>
+                        <div class="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center text-2xl ${game.iconColor} mr-4">
+                            <i class="fa-solid ${game.icon}"></i>
                         </div>
                         <div>
                             <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">${game.category}</span>
@@ -350,148 +261,15 @@
                     </div>
                     <p class="text-gray-500 text-sm mb-6 flex-grow">${game.desc}</p>
                     <a href="${game.url}" target="_blank" class="w-full text-center bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white font-semibold py-2 rounded-lg transition duration-300">
-                        Play Now <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></i>
+                        Open Resource <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></i>
                     </a>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        // --- Filter Functions ---
-        function filterGames() {
-            const text = document.getElementById('searchInput').value;
-            renderGames(text);
-        }
-
-        function filterCategory(cat) {
-            // Update UI buttons
-            const buttons = document.querySelectorAll('button[onclick^="filterCategory"]');
-            buttons.forEach(btn => {
-                if (btn.textContent.trim() === (cat === 'all' ? 'All' : cat)) {
-                    btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
-                    btn.classList.add('bg-indigo-600', 'text-white');
-                } else {
-                    btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
-                    btn.classList.remove('bg-indigo-600', 'text-white');
-                }
-            });
-            renderGames(document.getElementById('searchInput').value, cat);
-        }
-
-        // --- Modal & Form Logic ---
-
-        function openModal(editMode = false) {
-            const modal = document.getElementById('gameModal');
-            const title = document.getElementById('modalTitle');
-            const form = document.getElementById('gameForm');
-            
-            modal.classList.add('active');
-            
-            if (!editMode) {
-                title.textContent = "Add New Resource";
-                form.reset();
-                document.getElementById('editId').value = '';
-                selectIcon('fa-calculator'); // Default
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('gameModal').classList.remove('active');
-        }
-
-        function selectIcon(iconClass) {
-            currentIcon = iconClass;
-            document.getElementById('selectedIcon').value = iconClass;
-            
-            // Visual feedback for selection
-            const btns = document.querySelectorAll('.icon-btn');
-            btns.forEach(btn => {
-                if (btn.querySelector('i').classList.contains(iconClass)) {
-                    btn.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-50');
-                } else {
-                    btn.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50');
-                }
-            });
-        }
-
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            
-            const id = document.getElementById('editId').value;
-            const title = document.getElementById('gameTitle').value;
-            const category = document.getElementById('gameCategory').value;
-            const url = document.getElementById('gameUrl').value;
-            const desc = document.getElementById('gameDesc').value;
-            
-            // Basic icon color mapping based on icon choice for variety
-            let color = 'text-indigo-600';
-            if (currentIcon.includes('chart')) color = 'text-green-600';
-            if (currentIcon.includes('shapes')) color = 'text-purple-600';
-            if (currentIcon.includes('ruler')) color = 'text-orange-600';
-            if (currentIcon.includes('cube')) color = 'text-blue-600';
-
-            if (id) {
-                // Edit existing
-                const index = games.findIndex(g => g.id == id);
-                if (index > -1) {
-                    games[index] = { id: parseInt(id), title, category, url, desc, icon: currentIcon, iconColor: color };
-                    showToast('Resource updated successfully');
-                }
-            } else {
-                // Add new
-                const newId = games.length > 0 ? Math.max(...games.map(g => g.id)) + 1 : 1;
-                games.push({ id: newId, title, category, url, desc, icon: currentIcon, iconColor: color });
-                showToast('New resource added');
-            }
-
-            saveGames();
-            closeModal();
-        }
-
-        function editGame(id) {
-            const game = games.find(g => g.id === id);
-            if (game) {
-                document.getElementById('editId').value = game.id;
-                document.getElementById('gameTitle').value = game.title;
-                document.getElementById('gameCategory').value = game.category;
-                document.getElementById('gameUrl').value = game.url;
-                document.getElementById('gameDesc').value = game.desc;
-                selectIcon(game.icon || 'fa-calculator');
-                
-                document.getElementById('modalTitle').textContent = "Edit Resource";
-                openModal(true);
-            }
-        }
-
-        function deleteGame(id) {
-            if (confirm('Are you sure you want to remove this resource?')) {
-                games = games.filter(g => g.id !== id);
-                saveGames();
-                showToast('Resource removed');
-            }
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').textContent = msg;
-            toast.classList.remove('translate-y-20');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20');
-            }, 3000);
-        }
-
-        // --- Init ---
+        // Initialize view
         renderGames();
-
-        // Close modal on outside click
-        document.getElementById('gameModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('gameModal')) closeModal();
-        });
-        
-        document.getElementById('loginModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('loginModal')) closeLoginModal();
-        });
-
     </script>
 </body>
 </html>
