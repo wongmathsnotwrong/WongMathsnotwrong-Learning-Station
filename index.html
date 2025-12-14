@@ -17,6 +17,9 @@
         
         /* Menu Active State */
         .menu-btn.active { background-color: #ede9fe; color: #6d28d9; border-color: #6d28d9; }
+        /* Hide scrollbar for clean look */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="text-gray-800 min-h-screen flex flex-col">
@@ -53,7 +56,7 @@
     <main class="flex-grow container mx-auto px-4 py-8">
         
         <!-- Welcome Banner -->
-        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 mb-10 text-white shadow-lg relative overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 mb-8 text-white shadow-lg relative overflow-hidden">
             <div class="absolute top-0 right-0 -mt-10 -mr-10 opacity-20">
                 <i class="fa-solid fa-shapes text-9xl"></i>
             </div>
@@ -61,17 +64,29 @@
             <p id="pageDesc" class="text-indigo-100 text-lg max-w-2xl">Select a category from the menu above to start learning.</p>
         </div>
 
-        <!-- Sub-Filter/Search (Filters within the selected group) -->
-        <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-            <div class="relative w-full sm:w-96">
-                <input type="text" id="searchInput" onkeyup="renderGames()" placeholder="Search title..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+        <!-- Filter Section -->
+        <div class="flex flex-col space-y-4 mb-8">
+            
+            <!-- Row 1: Search and Topic Filters -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="relative w-full sm:w-96">
+                    <input type="text" id="searchInput" onkeyup="renderGames()" placeholder="Search title..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                </div>
+                <!-- Topic Tags (Algebra, Geometry...) -->
+                <div id="categoryFilters" class="flex gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto no-scrollbar">
+                    <!-- Buttons injected by JS -->
+                </div>
             </div>
-            <!-- Topic Tags -->
-            <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
-                <button onclick="filterCategory('all')" class="cat-btn px-4 py-1 rounded-full bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition whitespace-nowrap">All Topics</button>
-                <button onclick="filterCategory('Algebra')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">Algebra</button>
-                <button onclick="filterCategory('Geometry')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">Geometry</button>
+
+            <!-- Row 2: Resource Type Filters (Notes, Quizzes...) - Hidden by default -->
+            <div id="typeFiltersContainer" class="hidden border-t border-gray-200 pt-4 animate-fade-in">
+                <div class="flex items-center gap-3 overflow-x-auto no-scrollbar">
+                    <span class="text-sm font-semibold text-gray-500 whitespace-nowrap uppercase tracking-wider">Filter by Type:</span>
+                    <div id="typeButtons" class="flex gap-2">
+                        <!-- Type Buttons injected by JS -->
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -86,7 +101,7 @@
                 <i class="fa-solid fa-box-open text-4xl text-gray-400"></i>
             </div>
             <h3 class="text-xl font-medium text-gray-600">No resources found</h3>
-            <p class="text-gray-500 mt-2">Try switching tabs or searching for something else.</p>
+            <p class="text-gray-500 mt-2">Try adjusting your filters.</p>
         </div>
     </main>
 
@@ -102,16 +117,21 @@
         // TEACHER: EDIT THIS SECTION TO UPDATE GAMES
         // ==========================================
         
-        // Note: 'group' determines which menu tab the item appears in:
-        // 'online' -> Online Resources (Desmos, Khan, etc.)
-        // 'wong'   -> Wong'Sources (Your uploads)
+        // Fields Guide:
+        // title: Name of resource
+        // group: 'online' or 'wong'
+        // category: 'Algebra', 'Geometry', 'Calculus', 'General' (The math topic)
+        // type: 'Notes', 'Quizzes', 'Exclusive resources', or 'Tool' (The format of resource)
+        // url: Link
+        // icon: FontAwesome class name
 
         const gamesData = [
             // --- ONLINE RESOURCES ---
             { 
                 title: 'Desmos Graphing', 
                 group: 'online',
-                category: 'Algebra', 
+                category: 'Algebra',
+                type: 'Tool',
                 url: 'https://www.desmos.com/calculator', 
                 desc: 'Powerful graphing calculator for visualizing functions.', 
                 icon: 'fa-calculator', 
@@ -120,7 +140,8 @@
             { 
                 title: 'GeoGebra Geometry', 
                 group: 'online',
-                category: 'Geometry', 
+                category: 'Geometry',
+                type: 'Tool',
                 url: 'https://www.geogebra.org/geometry', 
                 desc: 'Create and explore geometric constructions interactively.', 
                 icon: 'fa-shapes', 
@@ -129,7 +150,8 @@
             { 
                 title: 'Math is Fun', 
                 group: 'online',
-                category: 'General', 
+                category: 'General',
+                type: 'Tool',
                 url: 'https://www.mathsisfun.com/', 
                 desc: 'Simple explanations and puzzles for various topics.', 
                 icon: 'fa-cube', 
@@ -138,7 +160,8 @@
             { 
                 title: 'Khan Academy', 
                 group: 'online',
-                category: 'General', 
+                category: 'General',
+                type: 'Tool',
                 url: 'https://www.khanacademy.org/math', 
                 desc: 'Video lessons and practice exercises.', 
                 icon: 'fa-graduation-cap', 
@@ -147,56 +170,100 @@
             { 
                 title: 'Wolfram Alpha', 
                 group: 'online',
-                category: 'Calculus', 
+                category: 'Calculus',
+                type: 'Tool',
                 url: 'https://www.wolframalpha.com/', 
                 desc: 'Computational intelligence for complex math problems.', 
                 icon: 'fa-brain', 
                 iconColor: 'text-orange-500' 
             },
 
-            // --- WONG'SOURCES (Add your own resources below here) ---
+            // --- WONG'SOURCES ---
             { 
                 title: 'Conditions for Congruent Triangles Quiz', 
                 group: 'wong',
-                category: 'Geometry', 
+                category: 'Geometry',         // Subject
+                type: 'Quizzes',              // Type
                 url: 'https://wongmathsnotwrong.github.io/Conditions-for-Congruent-Triangles-Quiz/', 
                 desc: 'An interactive quiz to test your understanding of triangle congruence conditions.', 
                 icon: 'fa-clipboard-question', 
                 iconColor: 'text-yellow-600' 
+            },
+            // Example of a Note (You can uncomment/edit this)
+            /*
+            { 
+                title: 'Algebra 101 Notes', 
+                group: 'wong',
+                category: 'Algebra', 
+                type: 'Notes',
+                url: '#', 
+                desc: 'Chapter summary notes.', 
+                icon: 'fa-file-pdf', 
+                iconColor: 'text-red-500' 
             }
+            */
         ];
 
         // ==========================================
         // END OF EDITABLE SECTION
         // ==========================================
 
-        let currentGroup = 'all'; // 'all', 'wong', 'online'
-        let currentCategory = 'all'; // 'all', 'Algebra', 'Geometry', etc.
+        let currentGroup = 'all'; 
+        let currentCategory = 'all'; // Topic filter (Algebra, Geometry...)
+        let currentType = 'all';     // Type filter (Notes, Quizzes...)
 
         function filterGroup(group) {
             currentGroup = group;
+            currentCategory = 'all';
+            currentType = 'all';
             
-            // Update UI Buttons
+            // Update Menu Tabs UI
             document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active', 'bg-indigo-50', 'text-indigo-700', 'border-indigo-200'));
-            
             if(group !== 'all') {
                 const activeBtn = document.getElementById('btn-' + group);
                 if(activeBtn) activeBtn.classList.add('active');
             }
 
-            // Update Banner Text
             const title = document.getElementById('pageTitle');
             const desc = document.getElementById('pageDesc');
-            
+            const typeContainer = document.getElementById('typeFiltersContainer');
+            const typeButtonsDiv = document.getElementById('typeButtons');
+
+            // 1. Setup Main UI Text
             if (group === 'wong') {
                 title.textContent = "Wong'Sources";
                 desc.textContent = "Exclusive resources, notes, and quizzes created by Mr. Wong.";
+                typeContainer.classList.remove('hidden'); // Show Type Filters
             } else if (group === 'online') {
                 title.textContent = "Online Resources";
                 desc.textContent = "Trusted external tools like Desmos, GeoGebra, and Khan Academy.";
+                typeContainer.classList.add('hidden');    // Hide Type Filters
             } else {
                 title.textContent = "Welcome, Students!";
                 desc.textContent = "Select a category from the menu above to start learning.";
+                typeContainer.classList.add('hidden');
+            }
+
+            // 2. Setup Subject Filters (Always visible for both groups)
+            // Note: Reverted to subjects as requested
+            const subjectHtml = `
+                <button onclick="filterCategory('all')" class="cat-btn px-4 py-1 rounded-full bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition whitespace-nowrap">All Topics</button>
+                <button onclick="filterCategory('Algebra')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">Algebra</button>
+                <button onclick="filterCategory('Geometry')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">Geometry</button>
+                <button onclick="filterCategory('Calculus')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">Calculus</button>
+                <button onclick="filterCategory('General')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">General</button>
+            `;
+            document.getElementById('categoryFilters').innerHTML = subjectHtml;
+
+            // 3. Setup Type Filters (Only for Wong)
+            if (group === 'wong') {
+                const typeHtml = `
+                    <button onclick="filterType('all')" class="type-btn px-3 py-1 rounded-md bg-gray-800 text-white text-xs font-medium hover:bg-gray-700 transition">All</button>
+                    <button onclick="filterType('Exclusive resources')" class="type-btn px-3 py-1 rounded-md bg-white text-gray-600 border border-gray-200 text-xs font-medium hover:bg-gray-50 transition">Exclusive resources</button>
+                    <button onclick="filterType('Notes')" class="type-btn px-3 py-1 rounded-md bg-white text-gray-600 border border-gray-200 text-xs font-medium hover:bg-gray-50 transition">Notes</button>
+                    <button onclick="filterType('Quizzes')" class="type-btn px-3 py-1 rounded-md bg-white text-gray-600 border border-gray-200 text-xs font-medium hover:bg-gray-50 transition">Quizzes</button>
+                `;
+                typeButtonsDiv.innerHTML = typeHtml;
             }
 
             renderGames();
@@ -205,15 +272,30 @@
         function filterCategory(cat) {
             currentCategory = cat;
             
-            // Update UI Buttons
             const buttons = document.querySelectorAll('.cat-btn');
             buttons.forEach(btn => {
-                if (btn.textContent.includes(cat === 'all' ? 'All' : cat)) {
+                if (btn.textContent.trim() === (cat === 'all' ? 'All Topics' : cat)) {
                     btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
                     btn.classList.add('bg-indigo-600', 'text-white');
                 } else {
                     btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
                     btn.classList.remove('bg-indigo-600', 'text-white');
+                }
+            });
+            renderGames();
+        }
+
+        function filterType(type) {
+            currentType = type;
+            
+            const buttons = document.querySelectorAll('.type-btn');
+            buttons.forEach(btn => {
+                if (btn.textContent.trim() === (type === 'all' ? 'All' : type)) {
+                    btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+                    btn.classList.add('bg-gray-800', 'text-white');
+                } else {
+                    btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+                    btn.classList.remove('bg-gray-800', 'text-white');
                 }
             });
             renderGames();
@@ -226,17 +308,24 @@
             grid.innerHTML = '';
 
             const filteredGames = gamesData.filter(game => {
-                // Filter by Group (Menu Tab)
+                // 1. Filter by Group (Wong vs Online)
                 const matchesGroup = currentGroup === 'all' || game.group === currentGroup;
                 
-                // Filter by Category (Sub-buttons)
+                // 2. Filter by Category (Subject)
                 const matchesCategory = currentCategory === 'all' || game.category === currentCategory;
                 
-                // Filter by Search Text
+                // 3. Filter by Type (Notes/Quizzes) - Only applies if we aren't in 'all' group mode
+                // If group is 'wong', we check type. If group is 'online', we ignore type (or type is 'Tool')
+                let matchesType = true;
+                if (currentGroup === 'wong') {
+                    matchesType = currentType === 'all' || game.type === currentType;
+                }
+                
+                // 4. Filter by Search
                 const matchesSearch = game.title.toLowerCase().includes(searchText) || 
                                     game.desc.toLowerCase().includes(searchText);
 
-                return matchesGroup && matchesCategory && matchesSearch;
+                return matchesGroup && matchesCategory && matchesType && matchesSearch;
             });
 
             if (filteredGames.length === 0) {
@@ -249,14 +338,21 @@
                 const card = document.createElement('div');
                 card.className = `bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-full card-hover transition duration-300 group`;
                 
+                // Show Type badge for Wong's sources
+                let typeBadge = '';
+                if (game.group === 'wong' && game.type) {
+                    typeBadge = `<span class="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 px-2 py-1 rounded-full">${game.type}</span>`;
+                }
+
                 card.innerHTML = `
+                    ${typeBadge}
                     <div class="flex items-center mb-4">
                         <div class="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center text-2xl ${game.iconColor} mr-4">
                             <i class="fa-solid ${game.icon}"></i>
                         </div>
                         <div>
                             <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">${game.category}</span>
-                            <h3 class="font-bold text-gray-800 text-lg leading-tight">${game.title}</h3>
+                            <h3 class="font-bold text-gray-800 text-lg leading-tight pr-6">${game.title}</h3>
                         </div>
                     </div>
                     <p class="text-gray-500 text-sm mb-6 flex-grow">${game.desc}</p>
@@ -269,7 +365,7 @@
         }
 
         // Initialize view
-        renderGames();
+        filterGroup('all');
     </script>
 </body>
 </html>
