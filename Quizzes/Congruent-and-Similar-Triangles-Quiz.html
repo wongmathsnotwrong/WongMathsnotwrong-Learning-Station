@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Congruent and Similar Triangles Quiz / 全等及相似三角形測驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Nunito', 'Noto Sans TC', sans-serif;
+            background-color: #f0f9ff;
+            background-image: radial-gradient(#bae6fd 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        h1, h2, h3, .btn-font {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+        }
+
+        .triangle-path {
+            fill: rgba(56, 189, 248, 0.1);
+            stroke: #0ea5e9;
+            stroke-width: 2.5;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+
+        .mark-stroke {
+            stroke: #dc2626; /* Red for high contrast markings */
+            stroke-width: 2.5;
+            fill: none;
+        }
+
+        .angle-fill {
+            fill: rgba(220, 38, 38, 0.1); /* Light red fill for angles */
+        }
+
+        .card {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .option-btn {
+            transition: transform 0.1s, background-color 0.2s;
+            white-space: pre-wrap; /* Allow text wrapping for bilingual labels */
+            line-height: 1.2;
+        }
+        .option-btn:active {
+            transform: scale(0.98);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen items-center p-4">
+
+    <!-- App Container -->
+    <div id="app" class="w-full max-w-4xl">
+        
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold text-sky-800 mb-2">Congruent & Similar Triangles Quiz<br><span class="text-xl md:text-2xl">全等及相似三角形測驗</span></h1>
+            <p class="text-sky-600 font-semibold text-lg">Test your knowledge / 測試你的知識</p>
+        </header>
+
+        <!-- === QUIZ VIEW === -->
+        <div id="view-quiz" class="fade-in w-full max-w-2xl mx-auto">
+            <div class="card bg-white rounded-3xl overflow-hidden border-4 border-sky-100 relative">
+                
+                <!-- Progress -->
+                <div class="w-full h-3 bg-sky-100">
+                    <div id="progress-bar" class="h-full bg-sky-500 transition-all duration-500" style="width: 0%"></div>
+                </div>
+
+                <!-- Quiz Content -->
+                <div id="quiz-content" class="p-6 md:p-8">
+                    
+                    <div class="mb-4 text-center">
+                        <span id="question-type-badge" class="inline-block px-3 py-1 rounded-full text-sm font-bold bg-sky-100 text-sky-700 uppercase tracking-wider mb-2">
+                            Question Type
+                        </span>
+                        <h2 class="text-lg md:text-xl font-bold text-slate-800" id="question-text">
+                            Identify the condition
+                        </h2>
+                    </div>
+
+                    <!-- SVG Container -->
+                    <div class="bg-slate-50 rounded-2xl border-2 border-slate-100 mb-6 flex justify-center items-center overflow-hidden relative" style="min-height: 260px;">
+                        <div id="quiz-svg-container" class="w-full h-full flex justify-center items-center fade-in"></div>
+                    </div>
+
+                    <!-- Feedback -->
+                    <div id="feedback" class="hidden mb-4 text-center font-bold text-lg p-3 rounded-lg fade-in"></div>
+
+                    <!-- Options -->
+                    <div id="options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Buttons injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Results Screen -->
+                <div id="results-screen" class="hidden absolute inset-0 bg-white z-20 flex-col items-center justify-center p-8 text-center fade-in">
+                    <div class="text-6xl mb-4">🏆</div>
+                    <h2 class="text-3xl font-bold text-slate-800 mb-2">Quiz Complete! <br> <span class="text-2xl">測驗完成！</span></h2>
+                    <p class="text-xl text-slate-600 mb-8">Score / 得分: <span id="final-score" class="font-bold text-sky-600 text-3xl">0</span> / <span id="total-questions">0</span></p>
+                    <button onclick="startQuiz()" class="btn-font bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 rounded-xl text-xl shadow-[0_4px_0_rgb(14,116,144)] active:translate-y-[4px] active:shadow-none transition-all">
+                        Play Again / 再玩一次
+                    </button>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4 text-sky-900/40 text-sm font-semibold">
+                Score / 分數: <span id="current-score">0</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* -------------------------------------------------------------------------- */
+        /* GEOMETRY ENGINE                              */
+        /* -------------------------------------------------------------------------- */
+
+        const createSVG = (content) => `
+            <svg viewBox="0 0 500 250" class="w-full h-full max-w-[500px]" xmlns="http://www.w3.org/2000/svg">
+                ${content}
+            </svg>
+        `;
+
+        const tri1 = {
+            p1: {x: 40, y: 200},
+            p2: {x: 180, y: 200},
+            p3: {x: 100, y: 60}
+        };
+
+        const polyPoints = (t) => `${t.p1.x},${t.p1.y} ${t.p2.x},${t.p2.y} ${t.p3.x},${t.p3.y}`;
+
+        // Create a second triangle (shifted, optionally mirrored)
+        const getTri2 = (shiftX, mirror = false) => {
+            let t = {
+                p1: {x: tri1.p1.x + shiftX, y: tri1.p1.y},
+                p2: {x: tri1.p2.x + shiftX, y: tri1.p2.y},
+                p3: {x: tri1.p3.x + shiftX, y: tri1.p3.y}
+            };
+            if(mirror) {
+                const cx = (t.p1.x + t.p2.x + t.p3.x) / 3;
+                t.p1.x = cx + (cx - t.p1.x);
+                t.p2.x = cx + (cx - t.p2.x);
+                t.p3.x = cx + (cx - t.p3.x);
+            }
+            return t;
+        };
+
+        // Create a scaled triangle based on global tri1 proportions
+        // Base dimensions: Width=140, Height=140
+        const getCustomTri = (scale, startX) => {
+            const w = 140 * scale;
+            const h = 140 * scale;
+            const p1 = { x: startX, y: 200 };
+            const p2 = { x: startX + w, y: 200 };
+            // Original p3 offset from p1 was (60, -140)
+            const p3 = { x: startX + (60 * scale), y: 200 - h };
+            return { p1, p2, p3 };
+        };
+
+        const drawTriangle = (t) => `<polygon points="${polyPoints(t)}" class="triangle-path" />`;
+
+        const drawTick = (pA, pB, count) => {
+            const mx = (pA.x + pB.x) / 2;
+            const my = (pA.y + pB.y) / 2;
+            const dx = pB.x - pA.x;
+            const dy = pB.y - pA.y;
+            const len = Math.sqrt(dx*dx + dy*dy);
+            const nx = -dy / len * 10;
+            const ny = dx / len * 10;
+            
+            let svg = '';
+            const spacing = 6;
+            const offsetStart = -((count-1)*spacing)/2;
+
+            for(let i=0; i<count; i++) {
+                const off = offsetStart + (i*spacing);
+                const ux = dx/len * off;
+                const uy = dy/len * off;
+                svg += `<line x1="${mx + ux - nx}" y1="${my + uy - ny}" x2="${mx + ux + nx}" y2="${my + uy + ny}" class="mark-stroke" />`;
+            }
+            return svg;
+        };
+
+        const drawAngle = (pPrev, pVertex, pNext, count, isRight = false) => {
+            if(isRight) {
+                const size = 15;
+                const angle1 = Math.atan2(pPrev.y - pVertex.y, pPrev.x - pVertex.x);
+                const angle2 = Math.atan2(pNext.y - pVertex.y, pNext.x - pVertex.x);
+                const v1x = Math.cos(angle1) * size;
+                const v1y = Math.sin(angle1) * size;
+                const v2x = Math.cos(angle2) * size;
+                const v2y = Math.sin(angle2) * size;
+                return `<path d="M ${pVertex.x + v1x} ${pVertex.y + v1y} L ${pVertex.x + v1x + v2x} ${pVertex.y + v1y + v2y} L ${pVertex.x + v2x} ${pVertex.y + v2y}" class="mark-stroke" stroke-width="2" />`;
+            }
+
+            const r = 25;
+            const startAngle = Math.atan2(pPrev.y - pVertex.y, pPrev.x - pVertex.x);
+            const endAngle = Math.atan2(pNext.y - pVertex.y, pNext.x - pVertex.x);
+            
+            let diff = endAngle - startAngle;
+            while (diff <= -Math.PI) diff += 2 * Math.PI;
+            while (diff > Math.PI) diff -= 2 * Math.PI;
+            const sweepFlag = diff > 0 ? 1 : 0;
+
+            let svg = '';
+            const spacing = 5;
+            for(let i=0; i<count; i++) {
+                const radius = r + (i*spacing);
+                const x1 = pVertex.x + radius * Math.cos(startAngle);
+                const y1 = pVertex.y + radius * Math.sin(startAngle);
+                const x2 = pVertex.x + radius * Math.cos(endAngle);
+                const y2 = pVertex.y + radius * Math.sin(endAngle);
+                
+                svg += `<path d="M ${pVertex.x} ${pVertex.y} L ${x1} ${y1} A ${radius} ${radius} 0 0 ${sweepFlag} ${x2} ${y2} Z" class="angle-fill" opacity="0.3" />`;
+                svg += `<path d="M ${x1} ${y1} A ${radius} ${radius} 0 0 ${sweepFlag} ${x2} ${y2}" class="mark-stroke" fill="none" />`;
+            }
+            return svg;
+        };
+        
+        // Helper to draw text labels for side lengths
+        const drawLabel = (pA, pB, text, offset = 22) => {
+            const mx = (pA.x + pB.x) / 2;
+            const my = (pA.y + pB.y) / 2;
+            const dx = pB.x - pA.x;
+            const dy = pB.y - pA.y;
+            const len = Math.sqrt(dx*dx + dy*dy);
+            const nx = -dy / len * offset;
+            const ny = dx / len * offset;
+            
+            return `<text x="${mx + nx}" y="${my + ny + 5}" fill="#0369a1" font-size="16" font-family="Nunito, sans-serif" font-weight="700" text-anchor="middle" style="text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;">${text}</text>`;
+        };
+
+        /* -------------------------------------------------------------------------- */
+        /* DATA SOURCE                                 */
+        /* -------------------------------------------------------------------------- */
+
+        const congruentData = [
+            {
+                id: 'SSS',
+                title: 'Side-Side-Side (SSS)',
+                question: 'Which condition proves these triangles are CONGRUENT?\n哪一個條件證明這些三角形全等？',
+                answer: 'SSS',
+                distractors: ['SAS', 'ASA', 'RHS'],
+                explanation: 'Three pairs of corresponding sides are equal. / 三組對應邊相等。',
+                render: () => {
+                    const t1 = tri1; const t2 = getTri2(250, true);
+                    let s = drawTriangle(t1) + drawTriangle(t2);
+                    s += drawTick(t1.p1, t1.p2, 1) + drawTick(t2.p1, t2.p2, 1);
+                    s += drawTick(t1.p2, t1.p3, 2) + drawTick(t2.p2, t2.p3, 2);
+                    s += drawTick(t1.p3, t1.p1, 3) + drawTick(t2.p3, t2.p1, 3);
+                    return s;
+                }
+            },
+            {
+                id: 'SAS',
+                title: 'Side-Angle-Side (SAS)',
+                question: 'Which condition proves these triangles are CONGRUENT?\n哪一個條件證明這些三角形全等？',
+                answer: 'SAS',
+                distractors: ['SSS', 'AAS', 'RHS'],
+                explanation: 'Two sides and the included angle are equal. / 兩邊及夾角相等。',
+                render: () => {
+                    const t1 = tri1; const t2 = getTri2(250);
+                    let s = drawTriangle(t1) + drawTriangle(t2);
+                    s += drawTick(t1.p1, t1.p2, 1) + drawTick(t2.p1, t2.p2, 1);
+                    s += drawTick(t1.p1, t1.p3, 2) + drawTick(t2.p1, t2.p3, 2);
+                    s += drawAngle(t1.p2, t1.p1, t1.p3, 1) + drawAngle(t2.p2, t2.p1, t2.p3, 1);
+                    return s;
+                }
+            },
+            {
+                id: 'ASA',
+                title: 'Angle-Side-Angle (ASA)',
+                question: 'Which condition proves these triangles are CONGRUENT?\n哪一個條件證明這些三角形全等？',
+                answer: 'ASA',
+                distractors: ['SAS', 'SSS', 'AAS'],
+                explanation: 'Two angles and the included side are equal. / 兩角及夾邊相等。',
+                render: () => {
+                    const t1 = tri1; const t2 = getTri2(250, true);
+                    let s = drawTriangle(t1) + drawTriangle(t2);
+                    s += drawAngle(t1.p2, t1.p1, t1.p3, 1) + drawAngle(t2.p2, t2.p1, t2.p3, 1);
+                    s += drawAngle(t1.p1, t1.p2, t1.p3, 2) + drawAngle(t2.p1, t2.p2, t2.p3, 2);
+                    s += drawTick(t1.p1, t1.p2, 1) + drawTick(t2.p1, t2.p2, 1);
+                    return s;
+                }
+            },
+            {
+                id: 'AAS',
+                title: 'Angle-Angle-Side (AAS)',
+                question: 'Which condition proves these triangles are CONGRUENT?\n哪一個條件證明這些三角形全等？',
+                answer: 'AAS',
+                distractors: ['ASA', 'SAS', 'RHS'],
+                explanation: 'Two angles and a non-included side are equal. / 兩角及非夾邊相等。',
+                render: () => {
+                    const t1 = tri1; const t2 = getTri2(250);
+                    let s = drawTriangle(t1) + drawTriangle(t2);
+                    s += drawAngle(t1.p2, t1.p1, t1.p3, 1) + drawAngle(t2.p2, t2.p1, t2.p3, 1);
+                    s += drawAngle(t1.p1, t1.p2, t1.p3, 2) + drawAngle(t2.p1, t2.p2, t2.p3, 2);
+                    s += drawTick(t1.p1, t1.p3, 1) + drawTick(t2.p1, t2.p3, 1);
+                    return s;
+                }
+            },
+            {
+                id: 'RHS',
+                title: 'Right-Angle Hypotenuse Side (RHS)',
+                question: 'Which condition proves these triangles are CONGRUENT?\n哪一個條件證明這些三角形全等？',
+                answer: 'RHS',
+                distractors: ['SAS', 'SSS', 'ASA'],
+                explanation: 'A Right angle, the Hypotenuse and one Side. / 直角、斜邊及一邊相等。',
+                render: () => {
+                    const rt1 = { p1: {x: 60, y: 200}, p2: {x: 160, y: 200}, p3: {x: 60, y: 100} };
+                    const rt2 = { p1: {x: 310, y: 200}, p2: {x: 410, y: 200}, p3: {x: 310, y: 100} };
+                    let s = drawTriangle(rt1) + drawTriangle(rt2);
+                    s += drawAngle(rt1.p2, rt1.p1, rt1.p3, 1, true) + drawAngle(rt2.p2, rt2.p1, rt2.p3, 1, true);
+                    s += drawTick(rt1.p2, rt1.p3, 1) + drawTick(rt2.p2, rt2.p3, 1);
+                    s += drawTick(rt1.p1, rt1.p2, 2) + drawTick(rt2.p1, rt2.p2, 2);
+                    return s;
+                }
+            }
+        ];
+
+        const similarData = [
+            {
+                id: 'AAA',
+                title: 'Angle-Angle-Angle (AAA)',
+                question: 'Which condition proves these triangles are SIMILAR?\n哪一個條件證明這些三角形相似？',
+                answer: 'AAA',
+                distractors: ['3 Sides Prop.\n三邊成比例', '2 Sides Ratio + Angle\n兩邊成比例+夾角', 'Not Similar\n不相似'],
+                explanation: 'All corresponding angles are equal. / 所有對應角相等。',
+                render: () => {
+                    // T1: Scale 0.8 (Width 112)
+                    // T2: Scale 1.2 (Width 168) (Ratio 1.5 of T1)
+                    const t1 = getCustomTri(0.8, 40); 
+                    const t2 = getCustomTri(1.12, 220); // Scale relative to base
+                    let s = drawTriangle(t1) + drawTriangle(t2);
+                    s += drawAngle(t1.p2, t1.p1, t1.p3, 1) + drawAngle(t2.p2, t2.p1, t2.p3, 1);
+                    s += drawAngle(t1.p1, t1.p2, t1.p3, 2) + drawAngle(t2.p1, t2.p2, t2.p3, 2);
+                    s += drawAngle(t1.p1, t1.p3, t1.p2, 3) + drawAngle(t2.p1, t2.p3, t2.p2, 3);
+                    return s;
+                }
+            },
+            {
+                id: '3SP',
+                title: '3 Sides Proportional',
+                question: 'Which condition proves these triangles are SIMILAR?\n哪一個條件證明這些三角形相似？',
+                answer: '3 Sides Prop.\n三邊成比例',
+                distractors: ['AAA', '2 Sides Ratio + Angle\n兩邊成比例+夾角', 'RHS'],
+                explanation: 'All corresponding sides are in the same ratio. / 所有對應邊成比例。',
+                render: () => {
+                    // T1: Scale 0.8
+                    // T2: Scale 1.2 (Ratio 1.5 of T1)
+                    const t1 = getCustomTri(0.8, 40);
+                    const t2 = getCustomTri(1.2, 220);
+                    let s = drawTriangle(t1) + drawTriangle(t2);
+                    // Triangle 1 Labels
+                    s += drawLabel(t1.p1, t1.p2, "4");
+                    s += drawLabel(t1.p2, t1.p3, "6");
+                    s += drawLabel(t1.p3, t1.p1, "8");
+                    // Triangle 2 Labels
+                    s += drawLabel(t2.p1, t2.p2, "6");
+                    s += drawLabel(t2.p2, t2.p3, "9");
+                    s += drawLabel(t2.p3, t2.p1, "12");
+                    return s;
+                }
+            },
+            {
+                id: '2S1A',
+                title: 'Ratio of 2 Sides + Included Angle',
+                question: 'Which condition proves these triangles are SIMILAR?\n哪一個條件證明這些三角形相似？',
+                answer: '2 Sides Ratio + Angle\n兩邊成比例+夾角',
+                distractors: ['AAA', '3 Sides Prop.\n三邊成比例', 'SAS'],
+                explanation: 'Two sides in proportion and the included angle is equal. / 兩邊成比例及夾角相等。',
+                render: () => {
+                    // T1: Scale 0.8
+                    // T2: Scale 1.2
+                    const t1 = getCustomTri(0.8, 40);
+                    const t2 = getCustomTri(1.2, 220);
+                    let s = drawTriangle(t1) + drawTriangle(t2);
+                    // Angle
+                    s += drawAngle(t1.p2, t1.p1, t1.p3, 1) + drawAngle(t2.p2, t2.p1, t2.p3, 1);
+                    // Triangle 1 Sides
+                    s += drawLabel(t1.p1, t1.p2, "6");
+                    s += drawLabel(t1.p1, t1.p3, "8", 25);
+                    // Triangle 2 Sides
+                    s += drawLabel(t2.p1, t2.p2, "9");
+                    s += drawLabel(t2.p1, t2.p3, "12", 25);
+                    return s;
+                }
+            }
+        ];
+
+        /* -------------------------------------------------------------------------- */
+        /* APP LOGIC                                  */
+        /* -------------------------------------------------------------------------- */
+
+        // State
+        let quizQuestions = [];
+        let currentQIndex = 0;
+        let score = 0;
+        let isAnswering = false;
+
+        // --- Quiz Logic ---
+        function startQuiz() {
+            // Combine and shuffle
+            quizQuestions = [...congruentData.map(d => ({...d, type: 'Congruence (全等)'})), ...similarData.map(d => ({...d, type: 'Similarity (相似)'}))];
+            quizQuestions.sort(() => Math.random() - 0.5);
+            
+            currentQIndex = 0;
+            score = 0;
+            isAnswering = true;
+            
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('flex');
+            document.getElementById('current-score').textContent = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQIndex >= quizQuestions.length) {
+                showResults();
+                return;
+            }
+            isAnswering = true;
+            const q = quizQuestions[currentQIndex];
+
+            // Update UI
+            document.getElementById('progress-bar').style.width = `${(currentQIndex / quizQuestions.length) * 100}%`;
+            document.getElementById('question-type-badge').textContent = q.type;
+            
+            // Allow HTML in question text for line breaks
+            const qText = document.getElementById('question-text');
+            qText.innerHTML = q.question.replace(/\n/g, '<br>');
+            
+            document.getElementById('quiz-svg-container').innerHTML = createSVG(q.render());
+            
+            // Reset Feedback
+            const fb = document.getElementById('feedback');
+            fb.classList.add('hidden');
+            fb.className = 'hidden mb-4 text-center font-bold text-lg p-3 rounded-lg fade-in';
+
+            // Generate Options
+            const optsContainer = document.getElementById('options-grid');
+            optsContainer.innerHTML = '';
+            
+            const allOptions = [q.answer, ...q.distractors];
+            allOptions.sort(() => Math.random() - 0.5); // Shuffle options
+
+            allOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn btn-font bg-white border-2 border-slate-200 text-slate-600 hover:bg-sky-50 hover:border-sky-300 font-bold py-3 px-4 rounded-xl text-lg shadow-sm w-full';
+                btn.textContent = opt;
+                btn.onclick = () => handleAnswer(opt, btn);
+                optsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selected, btn) {
+            if (!isAnswering) return;
+            isAnswering = false;
+            
+            const q = quizQuestions[currentQIndex];
+            const isCorrect = selected === q.answer;
+            const fb = document.getElementById('feedback');
+
+            if (isCorrect) {
+                score++;
+                document.getElementById('current-score').textContent = score;
+                btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-600');
+                btn.classList.add('bg-green-500', 'border-green-600', 'text-white');
+                
+                fb.textContent = "Correct! " + q.explanation;
+                fb.classList.remove('hidden');
+                fb.classList.add('bg-green-100', 'text-green-800', 'border', 'border-green-200');
+            } else {
+                btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-600');
+                btn.classList.add('bg-red-500', 'border-red-600', 'text-white');
+                
+                // Highlight correct
+                Array.from(document.getElementById('options-grid').children).forEach(b => {
+                    if (b.textContent === q.answer) {
+                        b.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                    }
+                });
+
+                fb.textContent = `Incorrect. / 錯誤 \n The answer is: ${q.answer}`;
+                fb.classList.remove('hidden');
+                fb.classList.add('bg-red-100', 'text-red-800', 'border', 'border-red-200');
+            }
+
+            setTimeout(() => {
+                currentQIndex++;
+                loadQuestion();
+            }, 3000); // Increased delay slightly for reading text
+        }
+
+        function showResults() {
+            document.getElementById('results-screen').classList.remove('hidden');
+            document.getElementById('results-screen').classList.add('flex');
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('total-questions').textContent = quizQuestions.length;
+            document.getElementById('progress-bar').style.width = '100%';
+        }
+
+        // --- Init ---
+        startQuiz();
+
+    </script>
+</body>
+</html>
