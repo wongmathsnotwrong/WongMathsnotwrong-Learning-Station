@@ -35,7 +35,7 @@
                         <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm mr-3 shadow-md border-2 border-white ring-2 ring-indigo-100 flex-shrink-0">
                             WM
                         </div>
-                        <h1 class="text-xl sm:text-2xl font-bold tracking-tight gradient-text cursor-pointer" onclick="filterGroup('all')" id="siteTitle">WongMaths Station</h1>
+                        <h1 class="text-xl sm:text-2xl font-bold tracking-tight gradient-text cursor-pointer" onclick="filterGroup('all')" id="siteTitle">WongMaths Learning Station</h1>
                     </div>
                     
                     <!-- Language Toggle -->
@@ -126,7 +126,7 @@
         // ==========================================
         const translations = {
             en: {
-                siteTitle: "WongMaths Station",
+                siteTitle: "WongMaths Learning Station",
                 wongSource: "Wong'Sources",
                 onlineResource: "Online Resources",
                 welcomeTitle: "Welcome, Students!",
@@ -161,7 +161,7 @@
                 wongSource: "黃sir之源庫",
                 onlineResource: "網上資源",
                 welcomeTitle: "歡迎各位同學！",
-                welcomeDesc: "請在選單選擇類別開始學習。",
+                welcomeDesc: "請在上方選單選擇類別開始學習。",
                 wongTitle: "黃sir之源庫",
                 wongDesc: "由黃sir製作的專屬資源、筆記和測驗。",
                 onlineTitle: "網上資源",
@@ -279,7 +279,7 @@
                 group: 'wong',
                 category: 'General', 
                 type: 'Exclusive', // Changed from 'Exclusive resources'
-                url: 'Calculator Program commands or symbols (ENG).pdf', 
+                url: 'Calculator Program/Calculator Program commands or symbols (ENG).pdf', 
                 desc: 'Guide to special keys and symbols for Casio calculator programming.', 
                 desc_zh: 'Casio 計算機編程特殊按鍵與符號指南。',
                 icon: 'fa-keyboard', 
@@ -291,7 +291,7 @@
                 group: 'wong',
                 category: 'Algebra', 
                 type: 'Exclusive', // Changed from 'Exclusive resources'
-                url: 'Prog 1 Simultaneous Linear Equations Program (ENG) - 複製.pdf', 
+                url: 'Calculator Program/Prog 1 Simultaneous Linear Equations Program (ENG) - 複製.pdf', 
                 desc: 'Calculator program to solve simultaneous linear equations with complex coefficients.', 
                 desc_zh: '用於解複數係數聯立線性方程的計算機程式。',
                 icon: 'fa-code', 
@@ -303,7 +303,7 @@
                 group: 'wong',
                 category: 'Algebra', 
                 type: 'Exclusive', // Changed from 'Exclusive resources'
-                url: 'Prog 2 Completing the Square Program (ENG) - 複製.pdf', 
+                url: 'Calculator Program/Prog 2 Completing the Square Program (ENG) - 複製.pdf', 
                 desc: 'Program to easily find vertex form and coordinates by completing the square.', 
                 desc_zh: '透過配方法輕鬆找出頂點式和坐標的程式。',
                 icon: 'fa-code', 
@@ -315,7 +315,7 @@
                 group: 'wong',
                 category: 'Algebra', 
                 type: 'Exclusive', // Changed from 'Exclusive resources'
-                url: 'Prog 3 Cubic Equation Program (ENG) - 複製.pdf', 
+                url: 'Calculator Program/Prog 3 Cubic Equation Program (ENG) - 複製.pdf', 
                 desc: 'Powerful program to find roots (real and complex) for cubic equations.', 
                 desc_zh: '強大的程式，用於找出三次方程的根（實根和複根）。',
                 icon: 'fa-code', 
@@ -510,7 +510,7 @@
                 const displayDesc = (currentLang === 'zh' && game.desc_zh) ? game.desc_zh : game.desc;
                 const displayCategory = t[game.category] || game.category;
                 
-                // Show Type badge for Wong'Sources
+                // Show Type badge for Wong's sources
                 let typeBadge = '';
                 if (game.group === 'wong' && game.type) {
                     let displayBadgeType = t[game.type] || game.type;
@@ -542,6 +542,3 @@
     </script>
 </body>
 </html>
-
-
-
