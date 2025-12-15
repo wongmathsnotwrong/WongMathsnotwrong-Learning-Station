@@ -29,23 +29,31 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col sm:flex-row justify-between h-auto sm:h-20 py-3 sm:py-0">
                 
-                <!-- Left: Logo -->
-                <div class="flex items-center justify-center sm:justify-start mb-4 sm:mb-0">
-                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm mr-3 shadow-md border-2 border-white ring-2 ring-indigo-100 flex-shrink-0">
-                        WM
+                <!-- Left: Logo & Language Toggle -->
+                <div class="flex items-center justify-center sm:justify-start mb-4 sm:mb-0 gap-4">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm mr-3 shadow-md border-2 border-white ring-2 ring-indigo-100 flex-shrink-0">
+                            WM
+                        </div>
+                        <h1 class="text-xl sm:text-2xl font-bold tracking-tight gradient-text cursor-pointer" onclick="filterGroup('all')" id="siteTitle">WongMaths Station</h1>
                     </div>
-                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight gradient-text cursor-pointer" onclick="filterGroup('all')">WongMaths Station</h1>
+                    
+                    <!-- Language Toggle -->
+                    <div class="flex bg-gray-100 rounded-lg p-1">
+                        <button onclick="setLanguage('en')" id="lang-en" class="px-3 py-1 rounded-md text-sm font-medium transition duration-200">Eng</button>
+                        <button onclick="setLanguage('zh')" id="lang-zh" class="px-3 py-1 rounded-md text-sm font-medium transition duration-200">繁</button>
+                    </div>
                 </div>
 
                 <!-- Right: The 2 Menu Items -->
                 <div class="flex items-center justify-center space-x-2 sm:space-x-4">
                     <button onclick="filterGroup('wong')" id="btn-wong" class="menu-btn px-4 py-2 rounded-lg border border-transparent font-semibold text-gray-600 hover:bg-gray-50 transition flex items-center">
                         <i class="fa-solid fa-folder-open mr-2 text-yellow-500"></i>
-                        Wong'Sources
+                        <span id="txt-wong-source">Wong's Sources</span>
                     </button>
                     <button onclick="filterGroup('online')" id="btn-online" class="menu-btn px-4 py-2 rounded-lg border border-transparent font-semibold text-gray-600 hover:bg-gray-50 transition flex items-center">
                         <i class="fa-solid fa-globe mr-2 text-blue-500"></i>
-                        Online Resources
+                        <span id="txt-online-resource">Online Resources</span>
                     </button>
                 </div>
             </div>
@@ -82,7 +90,7 @@
             <!-- Row 2: Resource Type Filters (Notes, Quizzes...) - Hidden by default -->
             <div id="typeFiltersContainer" class="hidden border-t border-gray-200 pt-4 animate-fade-in">
                 <div class="flex items-center gap-3 overflow-x-auto no-scrollbar">
-                    <span class="text-sm font-semibold text-gray-500 whitespace-nowrap uppercase tracking-wider">Filter by Type:</span>
+                    <span id="txt-filter-by-type" class="text-sm font-semibold text-gray-500 whitespace-nowrap uppercase tracking-wider">Filter by Type:</span>
                     <div id="typeButtons" class="flex gap-2">
                         <!-- Type Buttons injected by JS -->
                     </div>
@@ -100,80 +108,153 @@
             <div class="inline-block p-6 rounded-full bg-gray-100 mb-4">
                 <i class="fa-solid fa-box-open text-4xl text-gray-400"></i>
             </div>
-            <h3 class="text-xl font-medium text-gray-600">No resources found</h3>
-            <p class="text-gray-500 mt-2">Try adjusting your filters.</p>
+            <h3 id="txt-no-resources" class="text-xl font-medium text-gray-600">No resources found</h3>
+            <p id="txt-try-adjusting" class="text-gray-500 mt-2">Try adjusting your filters.</p>
         </div>
     </main>
 
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 mt-auto">
         <div class="max-w-7xl mx-auto py-8 px-4 text-center">
-            <p class="text-gray-500 text-sm">Â© 2025 WongMaths Learning Station.</p>
+            <p class="text-gray-500 text-sm">© 2025 WongMaths Learning Station.</p>
         </div>
     </footer>
 
     <script>
         // ==========================================
+        // LOCALIZATION DICTIONARY
+        // ==========================================
+        const translations = {
+            en: {
+                siteTitle: "WongMaths Station",
+                wongSource: "Wong's Sources",
+                onlineResource: "Online Resources",
+                welcomeTitle: "Welcome, Students!",
+                welcomeDesc: "Select a category from the menu above to start learning.",
+                wongTitle: "Wong's Sources",
+                wongDesc: "Exclusive resources, notes, and quizzes created by Mr. Wong.",
+                onlineTitle: "Online Resources",
+                onlineDesc: "Trusted external tools like Desmos, GeoGebra, and Khan Academy.",
+                searchPlaceholder: "Search title...",
+                filterByType: "Filter by Type:",
+                noResources: "No resources found",
+                tryAdjusting: "Try adjusting your filters.",
+                openResource: "Open Resource",
+                
+                // Categories
+                allTopics: "All Topics",
+                allResources: "All Resources",
+                all: "All",
+                Algebra: "Algebra",
+                Geometry: "Geometry",
+                Calculus: "Calculus",
+                General: "General",
+                
+                // Types
+                Exclusive: "Exclusive resources",
+                Notes: "Notes",
+                Quizzes: "Quizzes",
+                Tool: "Tool"
+            },
+            zh: {
+                siteTitle: "黃sir數學站",
+                wongSource: "黃sir資源庫",
+                onlineResource: "網上資源",
+                welcomeTitle: "歡迎各位同學！",
+                welcomeDesc: "請在上方選單選擇類別開始學習。",
+                wongTitle: "黃sir資源庫",
+                wongDesc: "由黃sir製作的專屬資源、筆記和測驗。",
+                onlineTitle: "網上資源",
+                onlineDesc: "Desmos、GeoGebra 和 Khan Academy 等值得信賴的外部工具。",
+                searchPlaceholder: "搜尋標題...",
+                filterByType: "按類型篩選：",
+                noResources: "找不到資源",
+                tryAdjusting: "嘗試調整您的篩選條件。",
+                openResource: "開啟資源",
+                
+                // Categories
+                allTopics: "所有課題",
+                allResources: "所有資源",
+                all: "全部",
+                Algebra: "代數",
+                Geometry: "幾何",
+                Calculus: "微積分",
+                General: "一般",
+                
+                // Types
+                Exclusive: "專屬資源",
+                Notes: "筆記",
+                Quizzes: "測驗",
+                Tool: "工具"
+            }
+        };
+
+        // ==========================================
         // TEACHER: EDIT THIS SECTION TO UPDATE GAMES
         // ==========================================
         
-        // Fields Guide:
-        // title: Name of resource
-        // group: 'online' or 'wong'
-        // category: 'Algebra', 'Geometry', 'Calculus', 'General' (The math topic)
-        // type: 'Notes', 'Quizzes', 'Exclusive resources', or 'Tool' (The format of resource)
-        // url: Link
-        // icon: FontAwesome class name
-
+        // Updated Data Structure:
+        // Changed type 'Exclusive resources' to 'Exclusive' to match translation keys for proper filtering.
+        
         const gamesData = [
             // --- ONLINE RESOURCES ---
             { 
                 title: 'Desmos Graphing', 
+                title_zh: 'Desmos 繪圖計算機',
                 group: 'online',
                 category: 'Algebra',
                 type: 'Tool',
                 url: 'https://www.desmos.com/calculator', 
                 desc: 'Powerful graphing calculator for visualizing functions.', 
+                desc_zh: '強大的繪圖計算機，用於圖像化函數。',
                 icon: 'fa-calculator', 
                 iconColor: 'text-indigo-600' 
             },
             { 
                 title: 'GeoGebra Geometry', 
+                title_zh: 'GeoGebra 幾何',
                 group: 'online',
                 category: 'Geometry',
                 type: 'Tool',
                 url: 'https://www.geogebra.org/geometry', 
                 desc: 'Create and explore geometric constructions interactively.', 
+                desc_zh: '互動式建立和探索幾何構造。',
                 icon: 'fa-shapes', 
                 iconColor: 'text-purple-600' 
             },
             { 
                 title: 'Math is Fun', 
+                title_zh: 'Math is Fun (趣味數學)',
                 group: 'online',
                 category: 'General',
                 type: 'Tool',
                 url: 'https://www.mathsisfun.com/', 
                 desc: 'Simple explanations and puzzles for various topics.', 
+                desc_zh: '各種數學課題的簡單解釋和謎題。',
                 icon: 'fa-cube', 
                 iconColor: 'text-blue-600' 
             },
             { 
                 title: 'Khan Academy', 
+                title_zh: '可汗學院',
                 group: 'online',
                 category: 'General',
                 type: 'Tool',
                 url: 'https://www.khanacademy.org/math', 
                 desc: 'Video lessons and practice exercises.', 
+                desc_zh: '影片教學和練習題。',
                 icon: 'fa-graduation-cap', 
                 iconColor: 'text-green-600' 
             },
             { 
                 title: 'Wolfram Alpha', 
+                title_zh: 'Wolfram Alpha',
                 group: 'online',
                 category: 'Calculus',
                 type: 'Tool',
                 url: 'https://www.wolframalpha.com/', 
                 desc: 'Computational intelligence for complex math problems.', 
+                desc_zh: '用於解決複雜數學問題的計算智能工具。',
                 icon: 'fa-brain', 
                 iconColor: 'text-orange-500' 
             },
@@ -181,52 +262,62 @@
             // --- WONG'SOURCES ---
             { 
                 title: 'Conditions for Congruent Triangles Quiz', 
+                title_zh: '全等三角形條件測驗',
                 group: 'wong',
-                category: 'Geometry',         // Subject
-                type: 'Quizzes',              // Type
+                category: 'Geometry',
+                type: 'Quizzes',
                 url: 'https://wongmathsnotwrong.github.io/Conditions-for-Congruent-Triangles-Quiz/', 
                 desc: 'An interactive quiz to test your understanding of triangle congruence conditions.', 
+                desc_zh: '一個互動測驗，測試你對三角形全等條件的理解。',
                 icon: 'fa-clipboard-question', 
                 iconColor: 'text-yellow-600' 
             },
-            // --- New Uploaded PDFs ---
+            // --- Uploaded PDFs ---
             { 
                 title: 'Calculator Program Commands & Symbols', 
+                title_zh: '計算機程式指令與符號',
                 group: 'wong',
                 category: 'General', 
-                type: 'Exclusive resources',
-                url: 'Calculator Program/Calculator Program commands or symbols (ENG).pdf', // REPLACE THIS
+                type: 'Exclusive', // Changed from 'Exclusive resources'
+                url: 'Calculator Program commands or symbols (ENG).pdf', 
                 desc: 'Guide to special keys and symbols for Casio calculator programming.', 
+                desc_zh: 'Casio 計算機編程特殊按鍵與符號指南。',
                 icon: 'fa-keyboard', 
                 iconColor: 'text-gray-600' 
             },
             { 
                 title: 'Prog 1: Simultaneous Linear Equations', 
+                title_zh: 'Prog 1: 聯立線性方程',
                 group: 'wong',
                 category: 'Algebra', 
-                type: 'Exclusive resources',
-                url: 'Calculator Program/Prog 1 Simultaneous Linear Equations Program (ENG) - 複製.pdf', // REPLACE THIS
+                type: 'Exclusive', // Changed from 'Exclusive resources'
+                url: 'Prog 1 Simultaneous Linear Equations Program (ENG) - 複製.pdf', 
                 desc: 'Calculator program to solve simultaneous linear equations with complex coefficients.', 
+                desc_zh: '用於解複數係數聯立線性方程的計算機程式。',
                 icon: 'fa-code', 
                 iconColor: 'text-blue-500' 
             },
             { 
                 title: 'Prog 2: Completing the Square', 
+                title_zh: 'Prog 2: 配方法',
                 group: 'wong',
                 category: 'Algebra', 
-                type: 'Exclusive resources',
-                url: 'Calculator Program/Prog 2 Completing the Square Program (ENG) - 複製.pdf', // REPLACE THIS
+                type: 'Exclusive', // Changed from 'Exclusive resources'
+                url: 'Prog 2 Completing the Square Program (ENG) - 複製.pdf', 
                 desc: 'Program to easily find vertex form and coordinates by completing the square.', 
+                desc_zh: '透過配方法輕鬆找出頂點式和坐標的程式。',
                 icon: 'fa-code', 
                 iconColor: 'text-green-500' 
             },
             { 
                 title: 'Prog 3: Cubic Equation Solver', 
+                title_zh: 'Prog 3: 三次方程求解器',
                 group: 'wong',
                 category: 'Algebra', 
-                type: 'Exclusive resources',
-                url: 'Calculator Program/Prog 3 Cubic Equation Program (ENG) - 複製.pdf', // REPLACE THIS
+                type: 'Exclusive', // Changed from 'Exclusive resources'
+                url: 'Prog 3 Cubic Equation Program (ENG) - 複製.pdf', 
                 desc: 'Powerful program to find roots (real and complex) for cubic equations.', 
+                desc_zh: '強大的程式，用於找出三次方程的根（實根和複根）。',
                 icon: 'fa-code', 
                 iconColor: 'text-red-500' 
             }
@@ -236,14 +327,49 @@
         // END OF EDITABLE SECTION
         // ==========================================
 
+        let currentLang = 'en'; // 'en' or 'zh'
         let currentGroup = 'all'; 
-        let currentCategory = 'all'; // Topic filter (Algebra, Geometry...)
-        let currentType = 'all';     // Type filter (Notes, Quizzes...)
+        let currentCategory = 'all'; // Topic filter
+        let currentType = 'all';     // Type filter
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            
+            // Update Toggle Button Styles
+            const btnEn = document.getElementById('lang-en');
+            const btnZh = document.getElementById('lang-zh');
+            
+            if (lang === 'en') {
+                btnEn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+                btnEn.classList.remove('text-gray-600', 'hover:bg-gray-200');
+                btnZh.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+                btnZh.classList.add('text-gray-600', 'hover:bg-gray-200');
+            } else {
+                btnZh.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+                btnZh.classList.remove('text-gray-600', 'hover:bg-gray-200');
+                btnEn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+                btnEn.classList.add('text-gray-600', 'hover:bg-gray-200');
+            }
+
+            // Update Static Text Elements
+            const t = translations[lang];
+            document.getElementById('siteTitle').textContent = t.siteTitle;
+            document.getElementById('txt-wong-source').textContent = t.wongSource;
+            document.getElementById('txt-online-resource').textContent = t.onlineResource;
+            document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+            document.getElementById('txt-filter-by-type').textContent = t.filterByType;
+            document.getElementById('txt-no-resources').textContent = t.noResources;
+            document.getElementById('txt-try-adjusting').textContent = t.tryAdjusting;
+            
+            // Re-render the current view to update banner text and game cards
+            filterGroup(currentGroup);
+        }
 
         function filterGroup(group) {
             currentGroup = group;
             currentCategory = 'all';
             currentType = 'all';
+            const t = translations[currentLang];
             
             // Update Menu Tabs UI
             document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active', 'bg-indigo-50', 'text-indigo-700', 'border-indigo-200'));
@@ -259,37 +385,37 @@
 
             // 1. Setup Main UI Text
             if (group === 'wong') {
-                title.textContent = "Wong'Sources";
-                desc.textContent = "Exclusive resources, notes, and quizzes created by Mr. Wong.";
-                typeContainer.classList.remove('hidden'); // Show Type Filters
+                title.textContent = t.wongTitle;
+                desc.textContent = t.wongDesc;
+                typeContainer.classList.remove('hidden'); 
             } else if (group === 'online') {
-                title.textContent = "Online Resources";
-                desc.textContent = "Trusted external tools like Desmos, GeoGebra, and Khan Academy.";
-                typeContainer.classList.add('hidden');    // Hide Type Filters
+                title.textContent = t.onlineTitle;
+                desc.textContent = t.onlineDesc;
+                typeContainer.classList.add('hidden');
             } else {
-                title.textContent = "Welcome, Students!";
-                desc.textContent = "Select a category from the menu above to start learning.";
+                title.textContent = t.welcomeTitle;
+                desc.textContent = t.welcomeDesc;
                 typeContainer.classList.add('hidden');
             }
 
-            // 2. Setup Subject Filters (Always visible for both groups)
-            // Note: Reverted to subjects as requested
+            // 2. Setup Subject Filters
             const subjectHtml = `
-                <button onclick="filterCategory('all')" class="cat-btn px-4 py-1 rounded-full bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition whitespace-nowrap">All Topics</button>
-                <button onclick="filterCategory('Algebra')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">Algebra</button>
-                <button onclick="filterCategory('Geometry')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">Geometry</button>
-                <button onclick="filterCategory('Calculus')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">Calculus</button>
-                <button onclick="filterCategory('General')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">General</button>
+                <button onclick="filterCategory('all')" class="cat-btn px-4 py-1 rounded-full bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition whitespace-nowrap">${t.allTopics}</button>
+                <button onclick="filterCategory('Algebra')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">${t.Algebra}</button>
+                <button onclick="filterCategory('Geometry')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">${t.Geometry}</button>
+                <button onclick="filterCategory('Calculus')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">${t.Calculus}</button>
+                <button onclick="filterCategory('General')" class="cat-btn px-4 py-1 rounded-full bg-white text-gray-600 border border-gray-200 text-sm font-medium hover:bg-gray-50 transition whitespace-nowrap">${t.General}</button>
             `;
             document.getElementById('categoryFilters').innerHTML = subjectHtml;
 
             // 3. Setup Type Filters (Only for Wong)
             if (group === 'wong') {
+                // Modified filterType call to use 'Exclusive' instead of 'Exclusive resources'
                 const typeHtml = `
-                    <button onclick="filterType('all')" class="type-btn px-3 py-1 rounded-md bg-gray-800 text-white text-xs font-medium hover:bg-gray-700 transition">All</button>
-                    <button onclick="filterType('Exclusive resources')" class="type-btn px-3 py-1 rounded-md bg-white text-gray-600 border border-gray-200 text-xs font-medium hover:bg-gray-50 transition">Exclusive resources</button>
-                    <button onclick="filterType('Notes')" class="type-btn px-3 py-1 rounded-md bg-white text-gray-600 border border-gray-200 text-xs font-medium hover:bg-gray-50 transition">Notes</button>
-                    <button onclick="filterType('Quizzes')" class="type-btn px-3 py-1 rounded-md bg-white text-gray-600 border border-gray-200 text-xs font-medium hover:bg-gray-50 transition">Quizzes</button>
+                    <button onclick="filterType('all')" class="type-btn px-3 py-1 rounded-md bg-gray-800 text-white text-xs font-medium hover:bg-gray-700 transition">${t.all}</button>
+                    <button onclick="filterType('Exclusive')" class="type-btn px-3 py-1 rounded-md bg-white text-gray-600 border border-gray-200 text-xs font-medium hover:bg-gray-50 transition">${t.Exclusive}</button>
+                    <button onclick="filterType('Notes')" class="type-btn px-3 py-1 rounded-md bg-white text-gray-600 border border-gray-200 text-xs font-medium hover:bg-gray-50 transition">${t.Notes}</button>
+                    <button onclick="filterType('Quizzes')" class="type-btn px-3 py-1 rounded-md bg-white text-gray-600 border border-gray-200 text-xs font-medium hover:bg-gray-50 transition">${t.Quizzes}</button>
                 `;
                 typeButtonsDiv.innerHTML = typeHtml;
             }
@@ -299,10 +425,15 @@
 
         function filterCategory(cat) {
             currentCategory = cat;
+            const t = translations[currentLang];
             
+            // Map category keyword to display text for comparison
+            let displayCat = t[cat] || cat;
+            if(cat === 'all') displayCat = t.allTopics;
+
             const buttons = document.querySelectorAll('.cat-btn');
             buttons.forEach(btn => {
-                if (btn.textContent.trim() === (cat === 'all' ? 'All Topics' : cat)) {
+                if (btn.textContent.trim() === displayCat) {
                     btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
                     btn.classList.add('bg-indigo-600', 'text-white');
                 } else {
@@ -315,10 +446,15 @@
 
         function filterType(type) {
             currentType = type;
-            
+            const t = translations[currentLang];
+
+            // Map type keyword to display text
+            let displayType = t[type] || type; 
+            if (type === 'all') displayType = t.all;
+
             const buttons = document.querySelectorAll('.type-btn');
             buttons.forEach(btn => {
-                if (btn.textContent.trim() === (type === 'all' ? 'All' : type)) {
+                if (btn.textContent.trim() === displayType) {
                     btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
                     btn.classList.add('bg-gray-800', 'text-white');
                 } else {
@@ -333,25 +469,28 @@
             const searchText = document.getElementById('searchInput').value.toLowerCase();
             const grid = document.getElementById('gamesGrid');
             const emptyState = document.getElementById('emptyState');
+            const t = translations[currentLang];
             grid.innerHTML = '';
 
             const filteredGames = gamesData.filter(game => {
-                // 1. Filter by Group (Wong vs Online)
+                // 1. Group Filter
                 const matchesGroup = currentGroup === 'all' || game.group === currentGroup;
                 
-                // 2. Filter by Category (Subject)
+                // 2. Category Filter
                 const matchesCategory = currentCategory === 'all' || game.category === currentCategory;
                 
-                // 3. Filter by Type (Notes/Quizzes) - Only applies if we aren't in 'all' group mode
-                // If group is 'wong', we check type. If group is 'online', we ignore type (or type is 'Tool')
+                // 3. Type Filter
                 let matchesType = true;
                 if (currentGroup === 'wong') {
                     matchesType = currentType === 'all' || game.type === currentType;
                 }
                 
-                // 4. Filter by Search
-                const matchesSearch = game.title.toLowerCase().includes(searchText) || 
-                                    game.desc.toLowerCase().includes(searchText);
+                // 4. Search Filter (Check against current language title/desc)
+                const titleToCheck = (currentLang === 'zh' && game.title_zh) ? game.title_zh : game.title;
+                const descToCheck = (currentLang === 'zh' && game.desc_zh) ? game.desc_zh : game.desc;
+                
+                const matchesSearch = titleToCheck.toLowerCase().includes(searchText) || 
+                                    descToCheck.toLowerCase().includes(searchText);
 
                 return matchesGroup && matchesCategory && matchesType && matchesSearch;
             });
@@ -366,10 +505,16 @@
                 const card = document.createElement('div');
                 card.className = `bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-full card-hover transition duration-300 group`;
                 
+                // Localization Logic for Cards
+                const displayTitle = (currentLang === 'zh' && game.title_zh) ? game.title_zh : game.title;
+                const displayDesc = (currentLang === 'zh' && game.desc_zh) ? game.desc_zh : game.desc;
+                const displayCategory = t[game.category] || game.category;
+                
                 // Show Type badge for Wong's sources
                 let typeBadge = '';
                 if (game.group === 'wong' && game.type) {
-                    typeBadge = `<span class="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 px-2 py-1 rounded-full">${game.type}</span>`;
+                    let displayBadgeType = t[game.type] || game.type;
+                    typeBadge = `<span class="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 px-2 py-1 rounded-full">${displayBadgeType}</span>`;
                 }
 
                 card.innerHTML = `
@@ -379,13 +524,13 @@
                             <i class="fa-solid ${game.icon}"></i>
                         </div>
                         <div>
-                            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">${game.category}</span>
-                            <h3 class="font-bold text-gray-800 text-lg leading-tight pr-6">${game.title}</h3>
+                            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">${displayCategory}</span>
+                            <h3 class="font-bold text-gray-800 text-lg leading-tight pr-6">${displayTitle}</h3>
                         </div>
                     </div>
-                    <p class="text-gray-500 text-sm mb-6 flex-grow">${game.desc}</p>
+                    <p class="text-gray-500 text-sm mb-6 flex-grow">${displayDesc}</p>
                     <a href="${game.url}" target="_blank" class="w-full text-center bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white font-semibold py-2 rounded-lg transition duration-300">
-                        Open Resource <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></i>
+                        ${t.openResource} <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></i>
                     </a>
                 `;
                 grid.appendChild(card);
@@ -393,7 +538,7 @@
         }
 
         // Initialize view
-        filterGroup('all');
+        setLanguage('en'); // Default to English on load
     </script>
 </body>
 </html>
