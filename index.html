@@ -49,7 +49,7 @@
                 <div class="flex items-center justify-center space-x-2 sm:space-x-4">
                     <button onclick="filterGroup('wong')" id="btn-wong" class="menu-btn px-4 py-2 rounded-lg border border-transparent font-semibold text-gray-600 hover:bg-gray-50 transition flex items-center">
                         <i class="fa-solid fa-folder-open mr-2 text-yellow-500"></i>
-                        <span id="txt-wong-source">Wong's Sources</span>
+                        <span id="txt-wong-source">Wong'Sources</span>
                     </button>
                     <button onclick="filterGroup('online')" id="btn-online" class="menu-btn px-4 py-2 rounded-lg border border-transparent font-semibold text-gray-600 hover:bg-gray-50 transition flex items-center">
                         <i class="fa-solid fa-globe mr-2 text-blue-500"></i>
@@ -127,11 +127,11 @@
         const translations = {
             en: {
                 siteTitle: "WongMaths Station",
-                wongSource: "Wong's Sources",
+                wongSource: "Wong'Sources",
                 onlineResource: "Online Resources",
                 welcomeTitle: "Welcome, Students!",
                 welcomeDesc: "Select a category from the menu above to start learning.",
-                wongTitle: "Wong's Sources",
+                wongTitle: "Wong'Sources",
                 wongDesc: "Exclusive resources, notes, and quizzes created by Mr. Wong.",
                 onlineTitle: "Online Resources",
                 onlineDesc: "Trusted external tools like Desmos, GeoGebra, and Khan Academy.",
@@ -510,7 +510,7 @@
                 const displayDesc = (currentLang === 'zh' && game.desc_zh) ? game.desc_zh : game.desc;
                 const displayCategory = t[game.category] || game.category;
                 
-                // Show Type badge for Wong's sources
+                // Show Type badge for Wong'Sources
                 let typeBadge = '';
                 if (game.group === 'wong' && game.type) {
                     let displayBadgeType = t[game.type] || game.type;
@@ -542,4 +542,5 @@
     </script>
 </body>
 </html>
+
 
