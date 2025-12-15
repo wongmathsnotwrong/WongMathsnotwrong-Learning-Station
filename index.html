@@ -193,9 +193,6 @@
         // TEACHER: EDIT THIS SECTION TO UPDATE GAMES
         // ==========================================
         
-        // Updated Data Structure:
-        // Changed type 'Exclusive resources' to 'Exclusive' to match translation keys for proper filtering.
-        
         const gamesData = [
             // --- ONLINE RESOURCES ---
             { 
@@ -261,25 +258,27 @@
 
             // --- WONG'SOURCES ---
             { 
-                title: 'Conditions for Congruent Triangles Quiz', 
-                title_zh: '全等三角形條件測驗',
+                title: 'Congruent and Similar Triangles Quiz', 
+                title_zh: '全等及相似三角形測驗',
                 group: 'wong',
                 category: 'Geometry',
                 type: 'Quizzes',
-                url: 'https://wongmathsnotwrong.github.io/Conditions-for-Congruent-Triangles-Quiz/', 
-                desc: 'An interactive quiz to test your understanding of triangle congruence conditions.', 
-                desc_zh: '一個互動測驗，測試你對三角形全等條件的理解。',
+                // 👇 UPDATED LINK BELOW 👇
+                url: 'Quizzes/Congruent-and-Similar-Triangles-Quiz.html', 
+                desc: 'An interactive quiz to test your understanding of triangle congruence and similarity conditions', 
+                desc_zh: '一個互動測驗，測試你對三角形全等及相似條件的理解。',
                 icon: 'fa-clipboard-question', 
                 iconColor: 'text-yellow-600' 
             },
-            // --- Uploaded PDFs ---
+            
+            // --- Uploaded PDFs (Updated with User's Data) ---
             { 
                 title: 'Calculator Program Commands & Symbols', 
                 title_zh: '計算機程式指令與符號',
                 group: 'wong',
                 category: 'General', 
-                type: 'Exclusive', // Changed from 'Exclusive resources'
-                url: 'Calculator Program/Calculator Program commands or symbols (ENG).pdf', 
+                type: 'Exclusive', 
+                url: 'Exclusive resources/Calculator Program/Calculator Program commands or symbols (ENG).pdf', 
                 desc: 'Guide to special keys and symbols for Casio calculator programming.', 
                 desc_zh: 'Casio 計算機編程特殊按鍵與符號指南。',
                 icon: 'fa-keyboard', 
@@ -290,10 +289,10 @@
                 title_zh: 'Prog 1: 聯立線性方程',
                 group: 'wong',
                 category: 'Algebra', 
-                type: 'Exclusive', // Changed from 'Exclusive resources'
-                url: 'Calculator Program/Prog 1 Simultaneous Linear Equations Program (ENG) - 複製.pdf', 
+                type: 'Exclusive', 
+                url: 'Exclusive resources/Calculator Program/Prog 1 Simultaneous Linear Equations Program (ENG) - 複製.pdf', 
                 desc: 'Calculator program to solve simultaneous linear equations with complex coefficients.', 
-                desc_zh: '用於解複數係數聯立線性方程的計算機程式。',
+                desc_zh: '用於解聯立線性方程的計算機程式。',
                 icon: 'fa-code', 
                 iconColor: 'text-blue-500' 
             },
@@ -302,22 +301,22 @@
                 title_zh: 'Prog 2: 配方法',
                 group: 'wong',
                 category: 'Algebra', 
-                type: 'Exclusive', // Changed from 'Exclusive resources'
-                url: 'Calculator Program/Prog 2 Completing the Square Program (ENG) - 複製.pdf', 
+                type: 'Exclusive', 
+                url: 'Exclusive resources/Calculator Program/Prog 2 Completing the Square Program (ENG) - 複製.pdf', 
                 desc: 'Program to easily find vertex form and coordinates by completing the square.', 
-                desc_zh: '透過配方法輕鬆找出頂點式和坐標的程式。',
+                desc_zh: '透過配方法輕鬆找出頂點坐標的程式。',
                 icon: 'fa-code', 
                 iconColor: 'text-green-500' 
             },
             { 
                 title: 'Prog 3: Cubic Equation Solver', 
-                title_zh: 'Prog 3: 三次方程求解器',
+                title_zh: 'Prog 3: 三次方程求解',
                 group: 'wong',
                 category: 'Algebra', 
-                type: 'Exclusive', // Changed from 'Exclusive resources'
-                url: 'Calculator Program/Prog 3 Cubic Equation Program (ENG) - 複製.pdf', 
+                type: 'Exclusive', 
+                url: 'Exclusive resources/Calculator Program/Prog 3 Cubic Equation Program (ENG) - 複製.pdf', 
                 desc: 'Powerful program to find roots (real and complex) for cubic equations.', 
-                desc_zh: '強大的程式，用於找出三次方程的根（實根和複根）。',
+                desc_zh: '強大的三次方程求解程式，用於找出三次方程的根（實根和複根）。',
                 icon: 'fa-code', 
                 iconColor: 'text-red-500' 
             }
@@ -410,7 +409,6 @@
 
             // 3. Setup Type Filters (Only for Wong)
             if (group === 'wong') {
-                // Modified filterType call to use 'Exclusive' instead of 'Exclusive resources'
                 const typeHtml = `
                     <button onclick="filterType('all')" class="type-btn px-3 py-1 rounded-md bg-gray-800 text-white text-xs font-medium hover:bg-gray-700 transition">${t.all}</button>
                     <button onclick="filterType('Exclusive')" class="type-btn px-3 py-1 rounded-md bg-white text-gray-600 border border-gray-200 text-xs font-medium hover:bg-gray-50 transition">${t.Exclusive}</button>
