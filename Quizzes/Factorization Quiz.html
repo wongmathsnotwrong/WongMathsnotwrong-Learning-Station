@@ -111,10 +111,16 @@
                     <p id="feedbackSub" class="text-sm"></p>
                 </div>
 
-                <!-- Next Button -->
-                <div class="text-center">
-                    <button id="nextBtn" onclick="nextQuestion()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition transform hover:scale-105">
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between items-center mt-6">
+                    <button id="prevBtn" onclick="prevQuestion()" class="hidden bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-8 rounded-full shadow transition">
+                        Previous / 上一題
+                    </button>
+                    <button id="nextBtn" onclick="nextQuestion()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition transform hover:scale-105 ml-auto">
                         Next Question / 下一題
+                    </button>
+                    <button id="finishBtn" onclick="showResults()" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition transform hover:scale-105 ml-auto">
+                        Finish / 完成
                     </button>
                 </div>
             </div>
@@ -142,15 +148,12 @@
 
     <script>
         // State
-        let currentScore = 0;
-        let questionCount = 0;
+        let currentQuestionIndex = 0;
         let currentMode = 'mixed';
-        let currentQuestion = null;
-        let isAnswered = false;
         
         // Configuration
         const MAX_QUESTIONS = 10;
-        const BANK_SIZE = 50; // 50 questions per category
+        const BANK_SIZE = 50; 
 
         // Question Bank
         const questionBank = {
@@ -239,12 +242,10 @@
 
         // Generator 2: Common Factor (2 terms) -> kx^2 + kax OR kx + ka
         function generateCommonFactor() {
-            // Simplest: ax^2 + bx where x is common factor
             const k = getRandomInt(2, 6);
-            const m = getRandomInt(1, 5); // x coeff inside
-            const n = getRandomInt(1, 9); // const inside
+            const m = getRandomInt(1, 5); 
+            const n = getRandomInt(1, 9); 
             
-            // Expression: kx(mx + n) = kmx^2 + knx
             const A = k * m;
             const B = k * n;
             
@@ -264,7 +265,6 @@
 
         // Generator 3: Quadratic Trinomials (3 terms) -> x^2 + bx + c (a=1)
         function generateSimpleQuadratic() {
-            // (x + m)(x + n)
             let m = getRandomInt(-6, 6);
             let n = getRandomInt(-6, 6);
             if (m === 0) m = 1;
@@ -276,12 +276,10 @@
             const questionHtml = formatPoly(1, b, c);
             const correctAnswer = `${formatFactor(1, m)}${formatFactor(1, n)}`;
 
-            // Wrong answers: mess with signs
             const w1 = `${formatFactor(1, -m)}${formatFactor(1, -n)}`;
             const w2 = `${formatFactor(1, m)}${formatFactor(1, -n)}`;
             const w3 = `${formatFactor(1, -m)}${formatFactor(1, n)}`;
 
-            // Filter out duplicates (if m=n, w2 and w3 are same)
             let wrongs = [w1, w2, w3];
             if (m === n) {
                 wrongs = [w1, `${formatFactor(1, m+1)}${formatFactor(1, n-1)}`, `${formatFactor(1, m-1)}${formatFactor(1, n+1)}`];
@@ -296,7 +294,6 @@
         
         // Generator 4: Harder Quadratic (3 terms) -> ax^2 + bx + c
         function generateHardQuadratic() {
-            // (px + q)(rx + s)
             const p = getRandomInt(2, 3);
             const r = getRandomInt(1, 4);
             let q = getRandomInt(-5, 5);
@@ -311,10 +308,9 @@
             const questionHtml = formatPoly(a, b, c);
             const correctAnswer = `${formatFactor(p, q)}${formatFactor(r, s)}`;
 
-            // Distractors
-            const w1 = `${formatFactor(p, -q)}${formatFactor(r, -s)}`; // Signs flipped
-            const w2 = `${formatFactor(p, s)}${formatFactor(r, q)}`;   // Swapped constants
-            const w3 = `${formatFactor(p, q)}${formatFactor(r, -s)}`;  // One sign flipped
+            const w1 = `${formatFactor(p, -q)}${formatFactor(r, -s)}`;
+            const w2 = `${formatFactor(p, s)}${formatFactor(r, q)}`;
+            const w3 = `${formatFactor(p, q)}${formatFactor(r, -s)}`;
 
             return {
                 q: questionHtml,
@@ -326,26 +322,20 @@
         // --- Bank Initialization ---
 
         function initQuestionBank() {
-            // Clear existing
             questionBank.twoTerms = [];
             questionBank.threeTerms = [];
 
-            // 1. Populate 2 Terms Bank (50 questions)
-            // approx 50/50 split between Difference of Squares and Common Factor
             while (questionBank.twoTerms.length < BANK_SIZE) {
                 const type = Math.random() > 0.5 ? 1 : 2;
                 let qData;
                 if (type === 1) qData = generateDiffSquares();
                 else qData = generateCommonFactor();
 
-                // Prevent exact duplicates
                 if (!questionBank.twoTerms.some(existing => existing.q === qData.q)) {
                     questionBank.twoTerms.push(qData);
                 }
             }
 
-            // 2. Populate 3 Terms Bank (50 questions)
-            // approx 60/40 split between Simple (a=1) and Hard (a>1)
             while (questionBank.threeTerms.length < BANK_SIZE) {
                 const type = Math.random() > 0.4 ? 3 : 4; 
                 let qData;
@@ -356,19 +346,15 @@
                     questionBank.threeTerms.push(qData);
                 }
             }
-            
-            console.log(`Bank Initialized: ${questionBank.twoTerms.length} (2-terms) and ${questionBank.threeTerms.length} (3-terms)`);
         }
 
-        // Initialize bank on load
         initQuestionBank();
 
         // --- UI Logic ---
 
         function startGame(mode) {
             currentMode = mode;
-            currentScore = 0;
-            questionCount = 0;
+            currentQuestionIndex = 0;
             
             // Prepare the questions for this round
             let sourcePool = [];
@@ -378,124 +364,169 @@
             } else if (mode === '3terms') {
                 sourcePool = [...questionBank.threeTerms];
             } else {
-                // Mixed: Combine both banks
                 sourcePool = [...questionBank.twoTerms, ...questionBank.threeTerms];
             }
 
             // Shuffle the pool
             sourcePool.sort(() => Math.random() - 0.5);
 
-            // Select the top 10 questions
-            currentQuizQuestions = sourcePool.slice(0, MAX_QUESTIONS);
+            // Select top 10 and PREPARE options immediately so they are consistent when navigating
+            const rawQuestions = sourcePool.slice(0, MAX_QUESTIONS);
+            currentQuizQuestions = rawQuestions.map(q => {
+                // Clone to avoid modifying bank
+                let qObj = {...q};
+                
+                // Prepare Options
+                let options = [...qObj.wrong];
+                options = options.filter(opt => opt !== qObj.correct);
+                while(options.length < 3) {
+                     options.push(`(${getRandomInt(1,9)}x+1)(${getRandomInt(1,9)}x+1)`);
+                }
+                options = options.slice(0, 3);
+                options.push(qObj.correct);
+                options.sort(() => Math.random() - 0.5); // Shuffle options
+                
+                qObj.shuffledOptions = options;
+                qObj.userState = null; // { selected: string, isCorrect: boolean }
+                return qObj;
+            });
 
             document.getElementById('startScreen').classList.add('hidden');
             document.getElementById('resultScreen').classList.add('hidden');
             document.getElementById('quizScreen').classList.remove('hidden');
             
-            updateScore();
-            nextQuestion();
+            renderQuestion();
         }
 
-        function updateScore() {
-            document.getElementById('scoreDisplay').innerText = currentScore;
+        function calculateScore() {
+            return currentQuizQuestions.filter(q => q.userState && q.userState.isCorrect).length;
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('scoreDisplay').innerText = calculateScore();
+        }
+
+        function renderQuestion() {
+            const qData = currentQuizQuestions[currentQuestionIndex];
+            
+            // UI Update
+            document.getElementById('qNumber').innerText = `${currentQuestionIndex + 1} / ${MAX_QUESTIONS}`;
+            document.getElementById('progressBar').style.width = `${((currentQuestionIndex + 1) / MAX_QUESTIONS) * 100}%`;
+            document.getElementById('questionText').innerHTML = qData.q;
+            
+            // Handle Buttons logic
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const finishBtn = document.getElementById('finishBtn');
+            const feedbackArea = document.getElementById('feedbackArea');
+
+            // Reset generic feedback styles
+            feedbackArea.className = 'hidden text-center p-4 rounded-xl mb-6 animate-pop';
+
+            // Navigation Buttons visibility
+            if (currentQuestionIndex > 0) {
+                prevBtn.classList.remove('hidden');
+            } else {
+                prevBtn.classList.add('hidden');
+            }
+
+            // Next/Finish logic is dependent on if the user answered
+            nextBtn.classList.add('hidden');
+            finishBtn.classList.add('hidden');
+            feedbackArea.classList.add('hidden');
+
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = '';
+
+            qData.shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                // Base Style
+                let baseClasses = 'w-full border-2 text-xl font-medium py-4 px-6 rounded-xl transition duration-200 math-text shadow-sm ';
+                
+                // If question is already answered, apply persistent styles
+                if (qData.userState) {
+                    if (opt === qData.correct) {
+                        baseClasses += 'bg-green-100 border-green-500 text-green-800 ring-2 ring-green-400 ring-offset-2';
+                    } else if (opt === qData.userState.selected && !qData.userState.isCorrect) {
+                        baseClasses += 'bg-red-100 border-red-500 text-red-800';
+                    } else {
+                        baseClasses += 'bg-white border-gray-200 opacity-50 cursor-not-allowed';
+                    }
+                    btn.disabled = true;
+                } else {
+                    // Not answered yet
+                    baseClasses += 'bg-white border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 text-gray-700';
+                    btn.onclick = () => checkAnswer(opt);
+                }
+
+                btn.className = baseClasses;
+                btn.innerHTML = opt;
+                grid.appendChild(btn);
+            });
+
+            // If answered, show feedback and navigation
+            if (qData.userState) {
+                const isCorrect = qData.userState.isCorrect;
+                const feedbackText = document.getElementById('feedbackText');
+                const feedbackSub = document.getElementById('feedbackSub');
+
+                feedbackArea.classList.remove('hidden');
+                if (isCorrect) {
+                    feedbackArea.classList.add('bg-green-100', 'text-green-800');
+                    feedbackText.innerText = "Correct! / 答對了！";
+                    feedbackSub.innerText = "Great job!";
+                } else {
+                    feedbackArea.classList.add('bg-red-100', 'text-red-800');
+                    feedbackText.innerText = "Incorrect / 答錯了";
+                    feedbackSub.innerHTML = `The correct answer is <span class="math-text font-bold">${qData.correct}</span>`;
+                }
+
+                // Show Next or Finish
+                if (currentQuestionIndex < MAX_QUESTIONS - 1) {
+                    nextBtn.classList.remove('hidden');
+                } else {
+                    finishBtn.classList.remove('hidden');
+                }
+            }
+            
+            updateScoreDisplay();
+        }
+
+        function checkAnswer(selectedOption) {
+            const qData = currentQuizQuestions[currentQuestionIndex];
+            
+            if (qData.userState) return; // Already answered
+
+            const isCorrect = selectedOption === qData.correct;
+            
+            // Save state
+            qData.userState = {
+                selected: selectedOption,
+                isCorrect: isCorrect
+            };
+
+            // Re-render to show feedback and lock buttons
+            renderQuestion();
         }
 
         function nextQuestion() {
-            if (questionCount >= MAX_QUESTIONS) {
-                showResults();
-                return;
+            if (currentQuestionIndex < MAX_QUESTIONS - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
             }
-
-            // Get question from our selected batch
-            const qData = currentQuizQuestions[questionCount];
-            currentQuestion = qData;
-            
-            questionCount++;
-            isAnswered = false;
-            
-            // UI Reset
-            document.getElementById('qNumber').innerText = `${questionCount} / ${MAX_QUESTIONS}`;
-            document.getElementById('progressBar').style.width = `${(questionCount / MAX_QUESTIONS) * 100}%`;
-            document.getElementById('nextBtn').classList.add('hidden');
-            document.getElementById('feedbackArea').classList.add('hidden');
-            document.getElementById('feedbackArea').className = 'hidden text-center p-4 rounded-xl mb-6 animate-pop'; // reset classes
-
-            document.getElementById('questionText').innerHTML = qData.q;
-            
-            // Mix options
-            let options = [...qData.wrong];
-            // Remove duplicates just in case generated distractors match correct
-            options = options.filter(opt => opt !== qData.correct);
-            
-            // If we filtered too many, regenerate simplistic dummies (fallback)
-            while(options.length < 3) {
-                 options.push(`(${getRandomInt(1,9)}x+1)(${getRandomInt(1,9)}x+1)`);
-            }
-            // Take top 3 wrong + 1 correct
-            options = options.slice(0, 3);
-            options.push(qData.correct);
-            
-            // Shuffle
-            options.sort(() => Math.random() - 0.5);
-
-            // Render Buttons
-            const grid = document.getElementById('optionsGrid');
-            grid.innerHTML = '';
-            
-            options.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = 'w-full bg-white border-2 border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 text-gray-700 text-xl font-medium py-4 px-6 rounded-xl transition duration-200 math-text shadow-sm';
-                btn.innerHTML = opt;
-                btn.onclick = () => checkAnswer(opt, btn);
-                grid.appendChild(btn);
-            });
         }
 
-        function checkAnswer(selectedOption, btnElement) {
-            if (isAnswered) return;
-            isAnswered = true;
-
-            const isCorrect = selectedOption === currentQuestion.correct;
-            const feedbackArea = document.getElementById('feedbackArea');
-            const feedbackText = document.getElementById('feedbackText');
-            const feedbackSub = document.getElementById('feedbackSub');
-            const allBtns = document.getElementById('optionsGrid').children;
-
-            if (isCorrect) {
-                currentScore++;
-                updateScore();
-                btnElement.classList.remove('border-gray-200', 'hover:border-indigo-400', 'hover:bg-indigo-50');
-                btnElement.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
-                
-                feedbackArea.classList.remove('hidden');
-                feedbackArea.classList.add('bg-green-100', 'text-green-800');
-                feedbackText.innerText = "Correct! / 答對了！";
-                feedbackSub.innerText = "Great job! Keep going.";
-            } else {
-                btnElement.classList.remove('border-gray-200', 'hover:border-indigo-400', 'hover:bg-indigo-50');
-                btnElement.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
-                
-                // Highlight correct answer
-                for (let btn of allBtns) {
-                    if (btn.innerHTML === currentQuestion.correct) {
-                        btn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
-                        btn.classList.add('ring-2', 'ring-green-400', 'ring-offset-2');
-                    }
-                }
-
-                feedbackArea.classList.remove('hidden');
-                feedbackArea.classList.add('bg-red-100', 'text-red-800');
-                feedbackText.innerText = "Incorrect / 答錯了";
-                feedbackSub.innerHTML = `The correct answer is <span class="math-text font-bold">${currentQuestion.correct}</span>`;
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
             }
-
-            document.getElementById('nextBtn').classList.remove('hidden');
         }
 
         function showResults() {
             document.getElementById('quizScreen').classList.add('hidden');
             document.getElementById('resultScreen').classList.remove('hidden');
-            document.getElementById('finalScore').innerText = currentScore;
+            document.getElementById('finalScore').innerText = calculateScore();
             document.getElementById('totalQuestions').innerText = MAX_QUESTIONS;
         }
 

@@ -105,6 +105,16 @@
                     <div id="options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <!-- Buttons injected via JS -->
                     </div>
+
+                    <!-- Navigation Buttons -->
+                    <div class="flex justify-between mt-6 gap-4 border-t border-slate-100 pt-6">
+                        <button id="btn-prev" onclick="prevQuestion()" class="flex-1 btn-font bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-4 rounded-xl text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            &larr; Prev / 上一題
+                        </button>
+                        <button id="btn-next" onclick="nextQuestion()" class="flex-1 btn-font bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-xl text-lg shadow-[0_4px_0_rgb(14,116,144)] active:translate-y-[4px] active:shadow-none transition-all">
+                            Next / 下一題 &rarr;
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Results Screen -->
@@ -410,7 +420,7 @@
         // State
         let quizQuestions = [];
         let currentQIndex = 0;
-        let score = 0;
+        let userAnswers = [];
         let isAnswering = false;
 
         // --- Quiz Logic ---
@@ -419,14 +429,24 @@
             quizQuestions = [...congruentData.map(d => ({...d, type: 'Congruence (全等)'})), ...similarData.map(d => ({...d, type: 'Similarity (相似)'}))];
             quizQuestions.sort(() => Math.random() - 0.5);
             
+            // Initialize state
+            userAnswers = new Array(quizQuestions.length).fill(null);
             currentQIndex = 0;
-            score = 0;
-            isAnswering = true;
+            updateScoreDisplay();
             
             document.getElementById('results-screen').classList.add('hidden');
             document.getElementById('results-screen').classList.remove('flex');
-            document.getElementById('current-score').textContent = 0;
             loadQuestion();
+        }
+
+        function updateScoreDisplay() {
+             // Calculate score based on stored user answers
+            const currentScore = userAnswers.reduce((acc, ans, idx) => {
+                if (!ans) return acc;
+                return ans === quizQuestions[idx].answer ? acc + 1 : acc;
+            }, 0);
+            document.getElementById('current-score').textContent = currentScore;
+            return currentScore;
         }
 
         function loadQuestion() {
@@ -434,83 +454,131 @@
                 showResults();
                 return;
             }
-            isAnswering = true;
-            const q = quizQuestions[currentQIndex];
 
-            // Update UI
-            document.getElementById('progress-bar').style.width = `${(currentQIndex / quizQuestions.length) * 100}%`;
+            const q = quizQuestions[currentQIndex];
+            const storedAnswer = userAnswers[currentQIndex];
+            const hasAnswered = storedAnswer !== null;
+
+            // Update UI State
+            isAnswering = !hasAnswered; // Allow answering only if not answered yet
+
+            // Progress Bar
+            document.getElementById('progress-bar').style.width = `${((currentQIndex + (hasAnswered ? 1 : 0)) / quizQuestions.length) * 100}%`;
             document.getElementById('question-type-badge').textContent = q.type;
             
             // Allow HTML in question text for line breaks
             const qText = document.getElementById('question-text');
             qText.innerHTML = q.question.replace(/\n/g, '<br>');
             
+            // Render SVG
             document.getElementById('quiz-svg-container').innerHTML = createSVG(q.render());
             
-            // Reset Feedback
+            // --- Feedback Area ---
             const fb = document.getElementById('feedback');
-            fb.classList.add('hidden');
-            fb.className = 'hidden mb-4 text-center font-bold text-lg p-3 rounded-lg fade-in';
+            if (hasAnswered) {
+                const isCorrect = storedAnswer === q.answer;
+                fb.classList.remove('hidden');
+                if (isCorrect) {
+                    fb.textContent = "Correct! " + q.explanation;
+                    fb.className = 'mb-4 text-center font-bold text-lg p-3 rounded-lg fade-in bg-green-100 text-green-800 border border-green-200';
+                } else {
+                    fb.textContent = `Incorrect. / 錯誤 \n The answer is: ${q.answer}`;
+                    fb.className = 'mb-4 text-center font-bold text-lg p-3 rounded-lg fade-in bg-red-100 text-red-800 border border-red-200';
+                }
+            } else {
+                fb.classList.add('hidden');
+                fb.textContent = '';
+            }
 
-            // Generate Options
+            // --- Generate Options ---
             const optsContainer = document.getElementById('options-grid');
             optsContainer.innerHTML = '';
             
-            const allOptions = [q.answer, ...q.distractors];
-            allOptions.sort(() => Math.random() - 0.5); // Shuffle options
-
-            allOptions.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn btn-font bg-white border-2 border-slate-200 text-slate-600 hover:bg-sky-50 hover:border-sky-300 font-bold py-3 px-4 rounded-xl text-lg shadow-sm w-full';
-                btn.textContent = opt;
-                btn.onclick = () => handleAnswer(opt, btn);
-                optsContainer.appendChild(btn);
-            });
-        }
-
-        function handleAnswer(selected, btn) {
-            if (!isAnswering) return;
-            isAnswering = false;
+            // Create options array (if we want consistent order, we should store shuffled options in quizQuestions during init, 
+            // but for simplicity we reshuffle or regenerate. Note: Reshuffling on revisit might be jarring. 
+            // Ideally we should store option order. For this simple app, we will regenerate options based on data.)
+            // To prevent options jumping around on revisit, we'll simple concatenate answer + distractors and sort alphabetically for consistency, 
+            // OR store them. Let's store them in the question object on first load of that question if not present.
             
-            const q = quizQuestions[currentQIndex];
-            const isCorrect = selected === q.answer;
-            const fb = document.getElementById('feedback');
-
-            if (isCorrect) {
-                score++;
-                document.getElementById('current-score').textContent = score;
-                btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-600');
-                btn.classList.add('bg-green-500', 'border-green-600', 'text-white');
-                
-                fb.textContent = "Correct! " + q.explanation;
-                fb.classList.remove('hidden');
-                fb.classList.add('bg-green-100', 'text-green-800', 'border', 'border-green-200');
-            } else {
-                btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-600');
-                btn.classList.add('bg-red-500', 'border-red-600', 'text-white');
-                
-                // Highlight correct
-                Array.from(document.getElementById('options-grid').children).forEach(b => {
-                    if (b.textContent === q.answer) {
-                        b.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
-                    }
-                });
-
-                fb.textContent = `Incorrect. / 錯誤 \n The answer is: ${q.answer}`;
-                fb.classList.remove('hidden');
-                fb.classList.add('bg-red-100', 'text-red-800', 'border', 'border-red-200');
+            if (!q.shuffledOptions) {
+                 q.shuffledOptions = [q.answer, ...q.distractors].sort(() => Math.random() - 0.5);
             }
 
-            setTimeout(() => {
+            q.shuffledOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn btn-font border-2 font-bold py-3 px-4 rounded-xl text-lg shadow-sm w-full transition-all';
+                btn.textContent = opt;
+                
+                if (hasAnswered) {
+                    btn.disabled = true;
+                    btn.classList.add('cursor-default');
+                    if (opt === q.answer) {
+                        // Correct Answer Style
+                        btn.classList.add('bg-green-500', 'border-green-600', 'text-white');
+                    } else if (opt === storedAnswer) {
+                        // User's Wrong Answer Style
+                        btn.classList.add('bg-red-500', 'border-red-600', 'text-white');
+                    } else {
+                        // Other Options Style
+                        btn.classList.add('bg-white', 'border-slate-200', 'text-slate-400');
+                    }
+                } else {
+                    btn.disabled = false;
+                    btn.classList.add('bg-white', 'border-slate-200', 'text-slate-600', 'hover:bg-sky-50', 'hover:border-sky-300');
+                    btn.onclick = () => handleAnswer(opt);
+                }
+                
+                optsContainer.appendChild(btn);
+            });
+
+            // --- Navigation Buttons State ---
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+
+            btnPrev.disabled = currentQIndex === 0;
+            
+            if (currentQIndex === quizQuestions.length - 1) {
+                btnNext.innerHTML = 'Finish / 完成 &rarr;';
+            } else {
+                btnNext.innerHTML = 'Next / 下一題 &rarr;';
+            }
+        }
+
+        function handleAnswer(selected) {
+            if (!isAnswering) return;
+            
+            // Store Answer
+            userAnswers[currentQIndex] = selected;
+            updateScoreDisplay();
+            
+            // Refresh view to show feedback and lock buttons
+            loadQuestion();
+            
+            // Note: Removed setTimeout auto-advance as requested
+        }
+
+        function prevQuestion() {
+            if (currentQIndex > 0) {
+                currentQIndex--;
+                loadQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQIndex < quizQuestions.length - 1) {
                 currentQIndex++;
                 loadQuestion();
-            }, 3000); // Increased delay slightly for reading text
+            } else {
+                showResults();
+            }
         }
 
         function showResults() {
             document.getElementById('results-screen').classList.remove('hidden');
             document.getElementById('results-screen').classList.add('flex');
-            document.getElementById('final-score').textContent = score;
+            
+            const finalScore = updateScoreDisplay();
+            document.getElementById('final-score').textContent = finalScore;
             document.getElementById('total-questions').textContent = quizQuestions.length;
             document.getElementById('progress-bar').style.width = '100%';
         }
