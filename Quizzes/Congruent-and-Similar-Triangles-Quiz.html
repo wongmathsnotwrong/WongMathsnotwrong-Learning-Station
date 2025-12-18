@@ -59,6 +59,30 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Custom Scrollbar for results */
+        #results-screen::-webkit-scrollbar {
+            width: 8px;
+        }
+        #results-screen::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        #results-screen::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        #results-screen::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        
+        /* Trophy Animation */
+        .trophy-pop {
+            animation: trophyPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes trophyPop {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen items-center p-4">
@@ -118,13 +142,33 @@
                 </div>
 
                 <!-- Results Screen -->
-                <div id="results-screen" class="hidden absolute inset-0 bg-white z-20 flex-col items-center justify-center p-8 text-center fade-in">
-                    <div class="text-6xl mb-4">🏆</div>
-                    <h2 class="text-3xl font-bold text-slate-800 mb-2">Quiz Complete! <br> <span class="text-2xl">測驗完成！</span></h2>
-                    <p class="text-xl text-slate-600 mb-8">Score / 得分: <span id="final-score" class="font-bold text-sky-600 text-3xl">0</span> / <span id="total-questions">0</span></p>
-                    <button onclick="startQuiz()" class="btn-font bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 rounded-xl text-xl shadow-[0_4px_0_rgb(14,116,144)] active:translate-y-[4px] active:shadow-none transition-all">
-                        Play Again / 再玩一次
-                    </button>
+                <div id="results-screen" class="hidden absolute inset-0 bg-white z-20 flex flex-col overflow-y-auto p-4 md:p-8 fade-in">
+                    <div class="w-full max-w-2xl mx-auto flex flex-col items-center pb-8">
+                        
+                        <!-- Trophy Icon Container -->
+                        <div class="w-28 h-28 bg-yellow-100 rounded-full flex items-center justify-center mb-6 mt-8 shadow-sm trophy-pop">
+                            <span class="text-6xl drop-shadow-sm">🏆</span>
+                        </div>
+
+                        <h2 class="text-3xl font-bold text-slate-800 mb-2 text-center">Quiz Complete! <br> <span class="text-2xl">測驗完成！</span></h2>
+                        <p class="text-xl text-slate-600 mb-8 text-center flex items-center justify-center gap-2">
+                            Score / 得分: 
+                            <span class="font-bold text-sky-600 text-3xl flex items-center gap-1">
+                                <span id="final-score">0</span> / <span id="total-questions">0</span>
+                            </span>
+                        </p>
+                        
+                        <button onclick="startQuiz()" class="btn-font bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 rounded-xl text-xl shadow-[0_4px_0_rgb(14,116,144)] active:translate-y-[4px] active:shadow-none transition-all mb-8">
+                            Play Again / 再玩一次
+                        </button>
+
+                        <div class="w-full border-t-2 border-sky-100 pt-6">
+                            <h3 class="text-xl font-bold text-sky-800 mb-4 text-center">Review Answers / 檢討答案</h3>
+                            <div id="summary-list" class="space-y-4">
+                                <!-- Summary Cards injected here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -494,12 +538,6 @@
             const optsContainer = document.getElementById('options-grid');
             optsContainer.innerHTML = '';
             
-            // Create options array (if we want consistent order, we should store shuffled options in quizQuestions during init, 
-            // but for simplicity we reshuffle or regenerate. Note: Reshuffling on revisit might be jarring. 
-            // Ideally we should store option order. For this simple app, we will regenerate options based on data.)
-            // To prevent options jumping around on revisit, we'll simple concatenate answer + distractors and sort alphabetically for consistency, 
-            // OR store them. Let's store them in the question object on first load of that question if not present.
-            
             if (!q.shuffledOptions) {
                  q.shuffledOptions = [q.answer, ...q.distractors].sort(() => Math.random() - 0.5);
             }
@@ -513,13 +551,10 @@
                     btn.disabled = true;
                     btn.classList.add('cursor-default');
                     if (opt === q.answer) {
-                        // Correct Answer Style
                         btn.classList.add('bg-green-500', 'border-green-600', 'text-white');
                     } else if (opt === storedAnswer) {
-                        // User's Wrong Answer Style
                         btn.classList.add('bg-red-500', 'border-red-600', 'text-white');
                     } else {
-                        // Other Options Style
                         btn.classList.add('bg-white', 'border-slate-200', 'text-slate-400');
                     }
                 } else {
@@ -553,8 +588,6 @@
             
             // Refresh view to show feedback and lock buttons
             loadQuestion();
-            
-            // Note: Removed setTimeout auto-advance as requested
         }
 
         function prevQuestion() {
@@ -574,13 +607,61 @@
         }
 
         function showResults() {
-            document.getElementById('results-screen').classList.remove('hidden');
-            document.getElementById('results-screen').classList.add('flex');
+            const resultsScreen = document.getElementById('results-screen');
+            resultsScreen.classList.remove('hidden');
+            resultsScreen.classList.add('flex');
             
+            // Score Display
             const finalScore = updateScoreDisplay();
             document.getElementById('final-score').textContent = finalScore;
             document.getElementById('total-questions').textContent = quizQuestions.length;
             document.getElementById('progress-bar').style.width = '100%';
+
+            // Generate Summary Cards
+            const summaryContainer = document.getElementById('summary-list');
+            summaryContainer.innerHTML = ''; // Clear previous
+
+            quizQuestions.forEach((q, index) => {
+                const userAnswer = userAnswers[index];
+                const isCorrect = userAnswer === q.answer;
+                const isUnanswered = userAnswer === null;
+
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border-2 ${isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'} flex flex-col md:flex-row gap-4 items-center`;
+
+                // Mini SVG container
+                const svgContainer = document.createElement('div');
+                svgContainer.className = 'w-full md:w-48 h-32 bg-white rounded-xl border border-slate-100 flex-shrink-0 flex items-center justify-center';
+                svgContainer.innerHTML = createSVG(q.render());
+
+                // Text Content
+                const content = document.createElement('div');
+                content.className = 'flex-grow text-center md:text-left w-full';
+                
+                const title = document.createElement('h4');
+                title.className = 'font-bold text-slate-700 mb-1';
+                title.textContent = `Q${index + 1}: ${q.type}`;
+
+                const qText = document.createElement('p');
+                qText.className = 'text-sm text-slate-500 mb-2';
+                qText.textContent = q.question.split('\n')[0]; // Just take English part for summary brevity
+
+                const resultText = document.createElement('div');
+                if (isCorrect) {
+                    resultText.innerHTML = `<span class="text-green-600 font-bold">✓ Correct</span><br><span class="text-sm text-slate-600">Answer: ${userAnswer}</span>`;
+                } else {
+                    const wrongAns = isUnanswered ? 'None' : userAnswer;
+                    resultText.innerHTML = `<span class="text-red-600 font-bold">✗ Incorrect</span><br><span class="text-sm text-slate-600">Your Answer: <span class="line-through decoration-red-500">${wrongAns}</span></span><br><span class="text-sm text-green-700 font-bold">Correct: ${q.answer}</span>`;
+                }
+
+                content.appendChild(title);
+                content.appendChild(qText);
+                content.appendChild(resultText);
+
+                card.appendChild(svgContainer);
+                card.appendChild(content);
+                summaryContainer.appendChild(card);
+            });
         }
 
         // --- Init ---

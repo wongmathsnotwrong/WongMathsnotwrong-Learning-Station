@@ -136,6 +136,11 @@
                     <p class="text-4xl font-bold text-indigo-600"><span id="finalScore">0</span> / <span id="totalQuestions">0</span></p>
                 </div>
 
+                <!-- Summary Container -->
+                <div id="summaryContainer" class="text-left max-w-xl mx-auto mb-8 space-y-4">
+                    <!-- Summary items will be injected here -->
+                </div>
+
                 <div>
                     <button onclick="resetQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition">
                         Play Again / 再玩一次
@@ -528,11 +533,50 @@
             document.getElementById('resultScreen').classList.remove('hidden');
             document.getElementById('finalScore').innerText = calculateScore();
             document.getElementById('totalQuestions').innerText = MAX_QUESTIONS;
+            
+            generateSummary();
+        }
+
+        function generateSummary() {
+            const container = document.getElementById('summaryContainer');
+            container.innerHTML = '<h3 class="text-center text-xl font-bold text-gray-700 mb-4 border-b pb-2">Review / 檢討</h3>';
+            
+            currentQuizQuestions.forEach((q, index) => {
+                const isCorrect = q.userState ? q.userState.isCorrect : false;
+                const userAns = q.userState ? q.userState.selected : '<span class="text-gray-400">No Answer / 未作答</span>';
+                
+                // Create card
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-lg border-l-4 shadow-sm ${isCorrect ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`;
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-gray-600 text-sm">Question ${index + 1}</span>
+                        <span class="text-lg">${isCorrect ? '✅' : '❌'}</span>
+                    </div>
+                    <div class="math-text text-xl font-bold text-gray-800 mb-3 text-center bg-white/50 py-2 rounded">${q.q}</div>
+                    <div class="text-sm space-y-2">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center p-2 rounded ${isCorrect ? 'bg-green-100/50' : 'bg-red-100/50'}">
+                            <span class="text-gray-600 font-semibold mb-1 sm:mb-0">Your Answer:</span>
+                            <span class="math-text font-medium ${isCorrect ? 'text-green-800' : 'text-red-800'} break-all sm:text-right">${userAns}</span>
+                        </div>
+                        ${!isCorrect ? `
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center p-2 rounded bg-green-100/50">
+                            <span class="text-gray-600 font-semibold mb-1 sm:mb-0">Correct Answer:</span>
+                            <span class="math-text font-medium text-green-800 break-all sm:text-right">${q.correct}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
         }
 
         function resetQuiz() {
             document.getElementById('resultScreen').classList.add('hidden');
             document.getElementById('startScreen').classList.remove('hidden');
+            // Clear summary to prevent duplicates if inspecting DOM (optional since we overwrite innerHTML)
+            document.getElementById('summaryContainer').innerHTML = '';
         }
 
     </script>
