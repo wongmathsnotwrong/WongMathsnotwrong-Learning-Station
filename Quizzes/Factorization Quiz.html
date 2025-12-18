@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factorization Quiz / 因式分解測驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Nunito:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Nunito', 'Noto Sans TC', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .math-text {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+        }
+        
+        .math-text span, .math-text sup {
+            font-style: normal;
+        }
+
+        /* Custom animation for feedback */
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .animate-pop {
+            animation: popIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main Container -->
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-indigo-600 p-6 text-white text-center relative">
+            <h1 class="text-2xl md:text-3xl font-bold mb-2">Factorization Quiz</h1>
+            <h2 class="text-xl md:text-2xl font-medium opacity-90">因式分解測驗</h2>
+            <div class="absolute top-4 right-4 bg-indigo-800 rounded-full px-3 py-1 text-sm">
+                Score: <span id="scoreDisplay">0</span>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="p-6 md:p-8">
+            
+            <!-- Start Screen -->
+            <div id="startScreen" class="text-center py-8">
+                <div class="mb-4 space-y-2 text-gray-600">
+                    <p class="text-lg">Practice factoring polynomials with 2 or 3 terms.</p>
+                    <p class="text-lg">練習兩項式或三項式的因式分解。</p>
+                </div>
+
+                <!-- Guideline Box -->
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8 mx-auto max-w-sm">
+                    <p class="font-bold text-blue-800 mb-2 text-sm uppercase tracking-wide">💡 Recommended Path / 建議順序</p>
+                    <div class="flex items-center justify-center space-x-2 text-sm font-bold text-gray-700">
+                        <span class="bg-white px-3 py-1 rounded shadow-sm">2 Terms</span>
+                        <span class="text-blue-300">➜</span>
+                        <span class="bg-white px-3 py-1 rounded shadow-sm">3 Terms</span>
+                        <span class="text-blue-300">➜</span>
+                        <span class="bg-white px-3 py-1 rounded shadow-sm">Mixed</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-4 max-w-sm mx-auto">
+                    <button onclick="startGame('mixed')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl transition transform hover:scale-105 shadow-md flex flex-col items-center order-3">
+                        <span class="text-lg">Start Quiz (Mixed)</span>
+                        <span class="text-sm opacity-80">開始測驗 (混合題型)</span>
+                    </button>
+                    <button onclick="startGame('2terms')" class="bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-bold py-3 px-6 rounded-xl transition flex flex-col items-center order-1">
+                        <span>2 Terms Only</span>
+                        <span class="text-xs">僅兩項式 (e.g., x²-4)</span>
+                    </button>
+                    <button onclick="startGame('3terms')" class="bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-bold py-3 px-6 rounded-xl transition flex flex-col items-center order-2">
+                        <span>3 Terms Only</span>
+                        <span class="text-xs">僅三項式 (e.g., x²+5x+6)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quiz Screen (Hidden by default) -->
+            <div id="quizScreen" class="hidden">
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                    <div id="progressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+
+                <!-- Question -->
+                <div class="text-center mb-8">
+                    <p class="text-gray-500 text-sm mb-2 uppercase tracking-wide font-bold">Question / 題目 <span id="qNumber">1</span></p>
+                    <div id="questionText" class="text-4xl md:text-5xl font-bold text-gray-800 math-text py-4">
+                        <!-- Math will go here -->
+                    </div>
+                </div>
+
+                <!-- Options Grid -->
+                <div id="optionsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <!-- Buttons generated by JS -->
+                </div>
+
+                <!-- Feedback Area -->
+                <div id="feedbackArea" class="hidden text-center p-4 rounded-xl mb-6 animate-pop">
+                    <p id="feedbackText" class="text-xl font-bold mb-1"></p>
+                    <p id="feedbackSub" class="text-sm"></p>
+                </div>
+
+                <!-- Next Button -->
+                <div class="text-center">
+                    <button id="nextBtn" onclick="nextQuestion()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-12 rounded-full shadow-lg transition transform hover:scale-105">
+                        Next Question / 下一題
+                    </button>
+                </div>
+            </div>
+
+            <!-- Result Screen (Hidden by default) -->
+            <div id="resultScreen" class="hidden text-center py-8">
+                <div class="text-6xl mb-4">🏆</div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Quiz Complete!</h2>
+                <h3 class="text-xl text-gray-600 mb-6">測驗結束</h3>
+                
+                <div class="bg-indigo-50 rounded-xl p-6 mb-8 inline-block w-full max-w-sm">
+                    <p class="text-gray-500 mb-1">Final Score / 最終分數</p>
+                    <p class="text-4xl font-bold text-indigo-600"><span id="finalScore">0</span> / <span id="totalQuestions">0</span></p>
+                </div>
+
+                <div>
+                    <button onclick="resetQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition">
+                        Play Again / 再玩一次
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentScore = 0;
+        let questionCount = 0;
+        let currentMode = 'mixed';
+        let currentQuestion = null;
+        let isAnswered = false;
+        
+        // Configuration
+        const MAX_QUESTIONS = 10;
+        const BANK_SIZE = 50; // 50 questions per category
+
+        // Question Bank
+        const questionBank = {
+            twoTerms: [],
+            threeTerms: []
+        };
+        let currentQuizQuestions = []; // The specific questions selected for the current round
+
+        // --- Math Generators ---
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function formatPoly(a, b, c) {
+            // Formats ax^2 + bx + c for HTML display
+            let str = '';
+            
+            // x^2 term
+            if (a !== 0) {
+                if (a === 1) str += 'x<sup>2</sup>';
+                else if (a === -1) str += '-x<sup>2</sup>';
+                else str += `${a}x<sup>2</sup>`;
+            }
+
+            // x term
+            if (b !== 0) {
+                let sign = (b > 0 && str !== '') ? '+' : '';
+                if (b === 1 && str !== '') sign += ''; // just +x
+                else if (b === -1) sign = '-';
+                else if (b === 1 && str === '') sign = 'x'; // start with x
+                else if (b === -1 && str === '') sign = '-x';
+                else sign += b;
+                
+                // Handle 1x and -1x cases specifically for middle of string
+                if (Math.abs(b) === 1 && str !== '') str += (b > 0 ? '+x' : '-x');
+                else str += (Math.abs(b) === 1 && str === '' ? (b > 0 ? 'x' : '-x') : sign + 'x');
+            }
+
+            // constant
+            if (c !== 0) {
+                if (c > 0 && str !== '') str += `+${c}`;
+                else str += `${c}`;
+            }
+
+            return str;
+        }
+
+        function formatFactor(a, b) {
+            // Formats (ax + b)
+            if (a === 0) return b.toString();
+            let str = '(';
+            if (a === 1) str += 'x';
+            else if (a === -1) str += '-x';
+            else str += `${a}x`;
+
+            if (b > 0) str += `+${b}`;
+            else if (b < 0) str += `${b}`;
+            
+            str += ')';
+            return str;
+        }
+
+        // Generator 1: Difference of Squares (2 terms) -> a^2x^2 - b^2
+        function generateDiffSquares() {
+            const a = getRandomInt(1, 5);
+            const b = getRandomInt(1, 9);
+            const a2 = a * a;
+            const b2 = b * b;
+            
+            // Question: (ax)^2 - b^2
+            const questionHtml = (a === 1 ? 'x<sup>2</sup>' : `${a2}x<sup>2</sup>`) + ` - ${b2}`;
+            const correctAnswer = `${formatFactor(a, -b)}${formatFactor(a, b)}`;
+            
+            // Distractors
+            const w1 = `${formatFactor(a, -b)}<sup>2</sup>`; // (ax-b)^2
+            const w2 = `${formatFactor(a, b)}<sup>2</sup>`;  // (ax+b)^2
+            const w3 = `${formatFactor(a, -b2)}${formatFactor(a, 1)}`; // Random logic error
+            
+            return {
+                q: questionHtml,
+                correct: correctAnswer,
+                wrong: [w1, w2, w3]
+            };
+        }
+
+        // Generator 2: Common Factor (2 terms) -> kx^2 + kax OR kx + ka
+        function generateCommonFactor() {
+            // Simplest: ax^2 + bx where x is common factor
+            const k = getRandomInt(2, 6);
+            const m = getRandomInt(1, 5); // x coeff inside
+            const n = getRandomInt(1, 9); // const inside
+            
+            // Expression: kx(mx + n) = kmx^2 + knx
+            const A = k * m;
+            const B = k * n;
+            
+            const questionHtml = `${A}x<sup>2</sup> + ${B}x`;
+            const correctAnswer = `${k}x${formatFactor(m, n)}`;
+            
+            const w1 = `${k}(${A}x<sup>2</sup> + ${n}x)`;
+            const w2 = `x${formatFactor(A, B)}`;
+            const w3 = `${k}x${formatFactor(m, -n)}`;
+            
+            return {
+                q: questionHtml,
+                correct: correctAnswer,
+                wrong: [w1, w2, w3]
+            };
+        }
+
+        // Generator 3: Quadratic Trinomials (3 terms) -> x^2 + bx + c (a=1)
+        function generateSimpleQuadratic() {
+            // (x + m)(x + n)
+            let m = getRandomInt(-6, 6);
+            let n = getRandomInt(-6, 6);
+            if (m === 0) m = 1;
+            if (n === 0) n = 1;
+
+            const b = m + n;
+            const c = m * n;
+
+            const questionHtml = formatPoly(1, b, c);
+            const correctAnswer = `${formatFactor(1, m)}${formatFactor(1, n)}`;
+
+            // Wrong answers: mess with signs
+            const w1 = `${formatFactor(1, -m)}${formatFactor(1, -n)}`;
+            const w2 = `${formatFactor(1, m)}${formatFactor(1, -n)}`;
+            const w3 = `${formatFactor(1, -m)}${formatFactor(1, n)}`;
+
+            // Filter out duplicates (if m=n, w2 and w3 are same)
+            let wrongs = [w1, w2, w3];
+            if (m === n) {
+                wrongs = [w1, `${formatFactor(1, m+1)}${formatFactor(1, n-1)}`, `${formatFactor(1, m-1)}${formatFactor(1, n+1)}`];
+            }
+
+            return {
+                q: questionHtml,
+                correct: correctAnswer,
+                wrong: wrongs
+            };
+        }
+        
+        // Generator 4: Harder Quadratic (3 terms) -> ax^2 + bx + c
+        function generateHardQuadratic() {
+            // (px + q)(rx + s)
+            const p = getRandomInt(2, 3);
+            const r = getRandomInt(1, 4);
+            let q = getRandomInt(-5, 5);
+            let s = getRandomInt(-5, 5);
+            if (q === 0) q = 1;
+            if (s === 0) s = 1;
+
+            const a = p * r;
+            const b = (p * s) + (q * r);
+            const c = q * s;
+
+            const questionHtml = formatPoly(a, b, c);
+            const correctAnswer = `${formatFactor(p, q)}${formatFactor(r, s)}`;
+
+            // Distractors
+            const w1 = `${formatFactor(p, -q)}${formatFactor(r, -s)}`; // Signs flipped
+            const w2 = `${formatFactor(p, s)}${formatFactor(r, q)}`;   // Swapped constants
+            const w3 = `${formatFactor(p, q)}${formatFactor(r, -s)}`;  // One sign flipped
+
+            return {
+                q: questionHtml,
+                correct: correctAnswer,
+                wrong: [w1, w2, w3]
+            };
+        }
+
+        // --- Bank Initialization ---
+
+        function initQuestionBank() {
+            // Clear existing
+            questionBank.twoTerms = [];
+            questionBank.threeTerms = [];
+
+            // 1. Populate 2 Terms Bank (50 questions)
+            // approx 50/50 split between Difference of Squares and Common Factor
+            while (questionBank.twoTerms.length < BANK_SIZE) {
+                const type = Math.random() > 0.5 ? 1 : 2;
+                let qData;
+                if (type === 1) qData = generateDiffSquares();
+                else qData = generateCommonFactor();
+
+                // Prevent exact duplicates
+                if (!questionBank.twoTerms.some(existing => existing.q === qData.q)) {
+                    questionBank.twoTerms.push(qData);
+                }
+            }
+
+            // 2. Populate 3 Terms Bank (50 questions)
+            // approx 60/40 split between Simple (a=1) and Hard (a>1)
+            while (questionBank.threeTerms.length < BANK_SIZE) {
+                const type = Math.random() > 0.4 ? 3 : 4; 
+                let qData;
+                if (type === 3) qData = generateSimpleQuadratic();
+                else qData = generateHardQuadratic();
+
+                if (!questionBank.threeTerms.some(existing => existing.q === qData.q)) {
+                    questionBank.threeTerms.push(qData);
+                }
+            }
+            
+            console.log(`Bank Initialized: ${questionBank.twoTerms.length} (2-terms) and ${questionBank.threeTerms.length} (3-terms)`);
+        }
+
+        // Initialize bank on load
+        initQuestionBank();
+
+        // --- UI Logic ---
+
+        function startGame(mode) {
+            currentMode = mode;
+            currentScore = 0;
+            questionCount = 0;
+            
+            // Prepare the questions for this round
+            let sourcePool = [];
+            
+            if (mode === '2terms') {
+                sourcePool = [...questionBank.twoTerms];
+            } else if (mode === '3terms') {
+                sourcePool = [...questionBank.threeTerms];
+            } else {
+                // Mixed: Combine both banks
+                sourcePool = [...questionBank.twoTerms, ...questionBank.threeTerms];
+            }
+
+            // Shuffle the pool
+            sourcePool.sort(() => Math.random() - 0.5);
+
+            // Select the top 10 questions
+            currentQuizQuestions = sourcePool.slice(0, MAX_QUESTIONS);
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            
+            updateScore();
+            nextQuestion();
+        }
+
+        function updateScore() {
+            document.getElementById('scoreDisplay').innerText = currentScore;
+        }
+
+        function nextQuestion() {
+            if (questionCount >= MAX_QUESTIONS) {
+                showResults();
+                return;
+            }
+
+            // Get question from our selected batch
+            const qData = currentQuizQuestions[questionCount];
+            currentQuestion = qData;
+            
+            questionCount++;
+            isAnswered = false;
+            
+            // UI Reset
+            document.getElementById('qNumber').innerText = `${questionCount} / ${MAX_QUESTIONS}`;
+            document.getElementById('progressBar').style.width = `${(questionCount / MAX_QUESTIONS) * 100}%`;
+            document.getElementById('nextBtn').classList.add('hidden');
+            document.getElementById('feedbackArea').classList.add('hidden');
+            document.getElementById('feedbackArea').className = 'hidden text-center p-4 rounded-xl mb-6 animate-pop'; // reset classes
+
+            document.getElementById('questionText').innerHTML = qData.q;
+            
+            // Mix options
+            let options = [...qData.wrong];
+            // Remove duplicates just in case generated distractors match correct
+            options = options.filter(opt => opt !== qData.correct);
+            
+            // If we filtered too many, regenerate simplistic dummies (fallback)
+            while(options.length < 3) {
+                 options.push(`(${getRandomInt(1,9)}x+1)(${getRandomInt(1,9)}x+1)`);
+            }
+            // Take top 3 wrong + 1 correct
+            options = options.slice(0, 3);
+            options.push(qData.correct);
+            
+            // Shuffle
+            options.sort(() => Math.random() - 0.5);
+
+            // Render Buttons
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = '';
+            
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full bg-white border-2 border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 text-gray-700 text-xl font-medium py-4 px-6 rounded-xl transition duration-200 math-text shadow-sm';
+                btn.innerHTML = opt;
+                btn.onclick = () => checkAnswer(opt, btn);
+                grid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedOption, btnElement) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const isCorrect = selectedOption === currentQuestion.correct;
+            const feedbackArea = document.getElementById('feedbackArea');
+            const feedbackText = document.getElementById('feedbackText');
+            const feedbackSub = document.getElementById('feedbackSub');
+            const allBtns = document.getElementById('optionsGrid').children;
+
+            if (isCorrect) {
+                currentScore++;
+                updateScore();
+                btnElement.classList.remove('border-gray-200', 'hover:border-indigo-400', 'hover:bg-indigo-50');
+                btnElement.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                
+                feedbackArea.classList.remove('hidden');
+                feedbackArea.classList.add('bg-green-100', 'text-green-800');
+                feedbackText.innerText = "Correct! / 答對了！";
+                feedbackSub.innerText = "Great job! Keep going.";
+            } else {
+                btnElement.classList.remove('border-gray-200', 'hover:border-indigo-400', 'hover:bg-indigo-50');
+                btnElement.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                
+                // Highlight correct answer
+                for (let btn of allBtns) {
+                    if (btn.innerHTML === currentQuestion.correct) {
+                        btn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                        btn.classList.add('ring-2', 'ring-green-400', 'ring-offset-2');
+                    }
+                }
+
+                feedbackArea.classList.remove('hidden');
+                feedbackArea.classList.add('bg-red-100', 'text-red-800');
+                feedbackText.innerText = "Incorrect / 答錯了";
+                feedbackSub.innerHTML = `The correct answer is <span class="math-text font-bold">${currentQuestion.correct}</span>`;
+            }
+
+            document.getElementById('nextBtn').classList.remove('hidden');
+        }
+
+        function showResults() {
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+            document.getElementById('finalScore').innerText = currentScore;
+            document.getElementById('totalQuestions').innerText = MAX_QUESTIONS;
+        }
+
+        function resetQuiz() {
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+        }
+
+    </script>
+</body>
+</html>
