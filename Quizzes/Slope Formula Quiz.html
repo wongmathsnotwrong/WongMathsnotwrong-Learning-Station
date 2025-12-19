@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slope Formula Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; /* Added Chinese font support */
+            background-color: #f3f4f6;
+            touch-action: manipulation;
+        }
+        canvas {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            cursor: crosshair;
+        }
+        
+        /* Fraction Styling */
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            font-size: 1.1em;
+            margin: 0 5px;
+        }
+        .numerator {
+            border-bottom: 2px solid currentColor;
+            padding: 0 5px;
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+        .denominator {
+            padding: 0 5px;
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .equals {
+            font-size: 1.2em;
+            margin: 0 8px;
+            font-weight: bold;
+        }
+
+        /* Button interactions */
+        .btn-option {
+            transition: all 0.2s;
+        }
+        .btn-option:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .btn-option:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        /* Summary Table */
+        .summary-row:nth-child(even) {
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Main Card -->
+    <!-- Added max-h-[90vh] and flex-col to ensure internal scrolling works -->
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col h-[90vh] max-h-[800px]">
+        
+        <!-- Header -->
+        <div class="bg-indigo-600 p-4 text-white flex justify-between items-center shrink-0 shadow-md z-10">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                </svg>
+                <span id="app-title">Slope Formula Quiz</span>
+            </h1>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="toggleLanguage()" class="text-xs bg-indigo-700 hover:bg-indigo-800 text-white font-semibold py-1 px-3 rounded border border-indigo-400 transition-colors">
+                    <span id="lang-btn-text">中文</span>
+                </button>
+                <div id="score-display" class="text-sm font-medium bg-indigo-800 px-3 py-1 rounded-full whitespace-nowrap">
+                    <span id="score-label">Score</span>: <span id="score">0</span> / <span id="total">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Content Area -->
+        <div id="quiz-view" class="p-6 overflow-y-auto relative flex-1">
+            
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+
+            <!-- Question Text -->
+            <div class="text-center mb-4">
+                <h2 class="text-lg text-gray-800 font-semibold mb-2"><span id="q-label">Question</span> <span id="q-number">1</span></h2>
+                <p class="text-gray-600">
+                    <span id="q-text-1">Which option correctly substitutes the points</span> <br>
+                    <span id="point1-display" class="font-bold text-red-500"></span> <span id="q-text-and">and</span> 
+                    <span id="point2-display" class="font-bold text-red-500"></span> 
+                    <span id="q-text-2">into the slope formula?</span>
+                </p>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="flex justify-center mb-6">
+                <div class="relative">
+                    <canvas id="slopeCanvas" width="300" height="300" class="border border-gray-200"></canvas>
+                </div>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <!-- Buttons injected by JS -->
+            </div>
+
+            <!-- Feedback & Next -->
+            <div id="feedback-area" class="hidden text-center animate-fade-in pb-4">
+                <p id="feedback-text" class="text-lg font-bold mb-4"></p>
+                <button id="next-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 mx-auto">
+                    Next Question
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Previous Button (Navigation) -->
+            <div class="mt-4 flex justify-start">
+                <button id="prev-btn" class="bg-white border-2 border-gray-200 hover:border-indigo-600 hover:text-indigo-600 text-gray-500 font-bold py-2 px-6 rounded-lg transition-all flex items-center gap-2 hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span id="prev-btn-text">Previous</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary View (Hidden by default) -->
+        <!-- SCROLL FIX: Added flex-1, min-h-0 to allow container to shrink and scroll -->
+        <div id="summary-view" class="hidden flex-col flex-1 min-h-0">
+            <div class="p-6 text-center border-b border-gray-100 shrink-0">
+                <h2 id="summary-title" class="text-2xl font-bold text-gray-800">Quiz Complete!</h2>
+                <p class="text-gray-600 mt-2"><span id="summary-score-text">You scored</span> <span id="final-score" class="font-bold text-indigo-600 text-xl"></span> / <span id="final-total"></span></p>
+            </div>
+            
+            <!-- SCROLL FIX: overflow-y-auto here handles the list scrolling -->
+            <div class="flex-1 overflow-y-auto p-4 bg-gray-50">
+                <table class="w-full text-left border-collapse bg-white shadow-sm rounded-lg overflow-hidden">
+                    <thead>
+                        <tr class="text-xs font-semibold tracking-wide text-gray-500 uppercase border-b bg-gray-100">
+                            <th id="th-points" class="px-4 py-3">Points</th>
+                            <th id="th-answer" class="px-4 py-3">Your Answer</th>
+                            <th id="th-result" class="px-4 py-3 text-center">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summary-list" class="divide-y divide-gray-200">
+                        <!-- Rows injected here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-4 border-t border-gray-100 bg-white text-center shrink-0 z-10 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+                <button id="restart-btn" onclick="location.reload()" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors shadow-lg">
+                    Restart Quiz
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+    // --- TRANSLATION DATA ---
+    const translations = {
+        en: {
+            appTitle: "Slope Formula Quiz",
+            scoreLabel: "Score",
+            langBtn: "中文", // Text to switch TO
+            qLabel: "Question",
+            qText1: "Which option correctly substitutes the points",
+            qTextAnd: "and",
+            qText2: "into the slope formula?",
+            prevBtn: "Previous",
+            nextBtn: "Next Question",
+            summaryTitle: "Quiz Complete!",
+            summaryScoreText: "You scored",
+            thPoints: "Points",
+            thAnswer: "Your Answer",
+            thResult: "Result",
+            restartBtn: "Restart Quiz",
+            feedbackCorrect: "Correct Formula Usage!",
+            feedbackWrong: `Incorrect. <br> Remember: <span class="fraction text-sm"><span class="numerator">Change in Y</span><span class="denominator">Change in X</span></span>`,
+            correctBadge: "Correct",
+            wrongBadge: "Wrong",
+            correctLabel: "Correct:"
+        },
+        zh: {
+            appTitle: "斜率公式測驗",
+            scoreLabel: "分數",
+            langBtn: "English",
+            qLabel: "題目",
+            qText1: "哪一個選項正確將點",
+            qTextAnd: "和",
+            qText2: "代入斜率公式？",
+            prevBtn: "上一題",
+            nextBtn: "下一題",
+            summaryTitle: "測驗完成！",
+            summaryScoreText: "你的得分",
+            thPoints: "坐標點",
+            thAnswer: "你的答案",
+            thResult: "結果",
+            restartBtn: "重新開始",
+            feedbackCorrect: "公式運用正確！",
+            feedbackWrong: `不正確。<br> 記住： <span class="fraction text-sm"><span class="numerator">y 的變化 (Rise)</span><span class="denominator">x 的變化 (Run)</span></span>`,
+            correctBadge: "正確",
+            wrongBadge: "錯誤",
+            correctLabel: "正確答案:"
+        }
+    };
+
+    let currentLang = 'en';
+
+    function toggleLanguage() {
+        currentLang = currentLang === 'en' ? 'zh' : 'en';
+        updateUIText();
+        // Re-render feedback or summary if visible
+        if (!document.getElementById('feedback-area').classList.contains('hidden')) {
+            const historyItem = userHistory[currentQIndex];
+            if (historyItem) showFeedback(historyItem.isCorrect);
+        }
+        if (!document.getElementById('summary-view').classList.contains('hidden')) {
+            showSummary(); // Re-render summary table with new language
+        }
+    }
+
+    function updateUIText() {
+        const t = translations[currentLang];
+        document.getElementById('app-title').textContent = t.appTitle;
+        document.getElementById('score-label').textContent = t.scoreLabel;
+        document.getElementById('lang-btn-text').textContent = t.langBtn;
+        document.getElementById('q-label').textContent = t.qLabel;
+        document.getElementById('q-text-1').textContent = t.qText1;
+        document.getElementById('q-text-and').textContent = t.qTextAnd;
+        document.getElementById('q-text-2').textContent = t.qText2;
+        document.getElementById('prev-btn-text').textContent = t.prevBtn;
+        
+        // Update Next button text carefully to preserve icon
+        const nextBtn = document.getElementById('next-btn');
+        const nextIcon = nextBtn.querySelector('svg').outerHTML;
+        nextBtn.innerHTML = `${t.nextBtn} ${nextIcon}`;
+
+        document.getElementById('summary-title').textContent = t.summaryTitle;
+        document.getElementById('summary-score-text').textContent = t.summaryScoreText;
+        document.getElementById('th-points').textContent = t.thPoints;
+        document.getElementById('th-answer').textContent = t.thAnswer;
+        document.getElementById('th-result').textContent = t.thResult;
+        document.getElementById('restart-btn').textContent = t.restartBtn;
+    }
+
+    // --- Helper to generate Fraction HTML ---
+    function makeFrac(num, den, result) {
+        return `<div class="flex items-center justify-center">
+                    <span class="fraction"><span class="numerator">${num}</span><span class="denominator">${den}</span></span>
+                    <span class="equals">=</span>
+                    <span>${result}</span>
+                </div>`;
+    }
+
+    // --- Utils for Fraction Simplification ---
+    function gcd(a, b) {
+        return b === 0 ? a : gcd(b, a % b);
+    }
+    
+    function simplifyFraction(num, den) {
+        if (den === 0) return "Undefined";
+        if (num === 0) return "0";
+        
+        let common = gcd(Math.abs(num), Math.abs(den));
+        num /= common;
+        den /= common;
+        
+        if (den < 0) { num = -num; den = -den; }
+        if (den === 1) return num.toString();
+        
+        return `${num}/${den}`;
+    }
+
+    // --- QUESTION GENERATOR ---
+    function generateQuestionBank(count = 50) {
+        const bank = [];
+        const seen = new Set();
+        
+        // Helper to add question to bank if unique
+        const tryAddQuestion = (x1, y1, x2, y2) => {
+            if (x1 === x2 && y1 === y2) return false;
+            
+            const key = `${x1},${y1}|${x2},${y2}`;
+            if (seen.has(key)) return false;
+            
+            const dy = y2 - y1;
+            const dx = x2 - x1;
+            const slopeVal = simplifyFraction(dy, dx);
+
+            // 1. Correct Option
+            const correctOpt = {
+                id: 'correct',
+                html: makeFrac(`${y2} - ${y1 < 0 ? `(${y1})` : y1}`, `${x2} - ${x1 < 0 ? `(${x1})` : x1}`, slopeVal)
+            };
+
+            // 2. Distractor: Run / Rise
+            const flipVal = simplifyFraction(dx, dy);
+            const wrong1 = {
+                id: 'wrong1',
+                html: makeFrac(`${x2} - ${x1 < 0 ? `(${x1})` : x1}`, `${y2} - ${y1 < 0 ? `(${y1})` : y1}`, flipVal)
+            };
+
+            // 3. Distractor: Add
+            const addVal = simplifyFraction(y2 + y1, x2 + x1);
+            const wrong2 = {
+                id: 'wrong2',
+                html: makeFrac(`${y2} + ${y1 < 0 ? `(${y1})` : y1}`, `${x2} + ${x1 < 0 ? `(${x1})` : x1}`, addVal)
+            };
+
+            // 4. Distractor: Sign flip in denominator
+            const signFlipVal = simplifyFraction(dy, -dx);
+            const wrong3 = {
+                id: 'wrong3',
+                html: makeFrac(`${y2} - ${y1 < 0 ? `(${y1})` : y1}`, `${x1} - ${x2 < 0 ? `(${x2})` : x2}`, signFlipVal)
+            };
+            
+            const options = [correctOpt, wrong1, wrong2, wrong3];
+            // Shuffle
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            seen.add(key);
+            bank.push({ p1: [x1, y1], p2: [x2, y2], options: options });
+            return true;
+        };
+
+        const getQuad = (x, y) => {
+            if (x > 0 && y > 0) return 1;
+            if (x < 0 && y > 0) return 2;
+            if (x < 0 && y < 0) return 3;
+            if (x > 0 && y < 0) return 4;
+            return 0;
+        };
+
+        // 1. Generate 25 Same-Quadrant Questions (Modified from 6)
+        let sameCount = 0;
+        let quadCycle = 1;
+        while (sameCount < 25) {
+            const q = quadCycle;
+            const xSign = (q === 2 || q === 3) ? -1 : 1;
+            const ySign = (q === 3 || q === 4) ? -1 : 1;
+            
+            const x1 = (Math.floor(Math.random() * 4) + 1) * xSign;
+            const y1 = (Math.floor(Math.random() * 4) + 1) * ySign;
+            const x2 = (Math.floor(Math.random() * 4) + 1) * xSign;
+            const y2 = (Math.floor(Math.random() * 4) + 1) * ySign;
+
+            if (tryAddQuestion(x1, y1, x2, y2)) {
+                sameCount++;
+                quadCycle = (quadCycle % 4) + 1;
+            }
+        }
+
+        // 2. Generate remaining (25) Different-Quadrant Questions
+        while (bank.length < count) {
+            const x1 = Math.floor(Math.random() * 9) - 4;
+            const y1 = Math.floor(Math.random() * 9) - 4;
+            const x2 = Math.floor(Math.random() * 9) - 4;
+            const y2 = Math.floor(Math.random() * 9) - 4;
+
+            if (x1 === 0 || y1 === 0 || x2 === 0 || y2 === 0) continue;
+            if (getQuad(x1, y1) !== getQuad(x2, y2)) {
+                tryAddQuestion(x1, y1, x2, y2);
+            }
+        }
+        return bank;
+    }
+
+    // --- State Management ---
+    let questions = [];
+    let fullQuestionBank = [];
+    let currentQIndex = 0;
+    let score = 0;
+    let isAnswered = false;
+    let userHistory = []; 
+    const QUIZ_LENGTH = 8;
+
+    // --- Canvas Setup ---
+    const canvas = document.getElementById('slopeCanvas');
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    const scale = 30; 
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    // --- UI Elements ---
+    const quizView = document.getElementById('quiz-view');
+    const summaryView = document.getElementById('summary-view');
+    const scoreEl = document.getElementById('score');
+    const totalEl = document.getElementById('total');
+    const qNumEl = document.getElementById('q-number');
+    const p1Display = document.getElementById('point1-display');
+    const p2Display = document.getElementById('point2-display');
+    const optionsContainer = document.getElementById('options-container');
+    const feedbackArea = document.getElementById('feedback-area');
+    const feedbackText = document.getElementById('feedback-text');
+    const nextBtn = document.getElementById('next-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const progressBar = document.getElementById('progress-bar');
+
+    // --- Initialization ---
+    function init() {
+        fullQuestionBank = generateQuestionBank(50);
+        questions = getRandomSubarray(fullQuestionBank, QUIZ_LENGTH);
+        totalEl.textContent = questions.length;
+        userHistory = new Array(questions.length).fill(null);
+        
+        loadQuestion();
+        nextBtn.addEventListener('click', handleNext);
+        prevBtn.addEventListener('click', handlePrev);
+        
+        updateUIText(); // Initialize text
+    }
+    
+    function getRandomSubarray(arr, size) {
+        const shuffled = arr.slice(0);
+        let i = arr.length;
+        let temp, index;
+        while (i--) {
+            index = Math.floor(Math.random() * (i + 1));
+            temp = shuffled[i];
+            shuffled[i] = shuffled[index];
+            shuffled[index] = temp;
+        }
+        return shuffled.slice(0, size);
+    }
+
+    // --- Core Logic ---
+
+    function loadQuestion() {
+        feedbackArea.classList.add('hidden');
+        
+        if (currentQIndex > 0) {
+            prevBtn.classList.remove('hidden');
+        } else {
+            prevBtn.classList.add('hidden');
+        }
+        
+        const q = questions[currentQIndex];
+        qNumEl.textContent = currentQIndex + 1;
+        p1Display.textContent = `(${q.p1[0]}, ${q.p1[1]})`;
+        p2Display.textContent = `(${q.p2[0]}, ${q.p2[1]})`;
+        
+        const progressPercent = ((currentQIndex) / questions.length) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        drawCoordinatePlane();
+        drawGraphLine(q.p1, q.p2);
+        
+        optionsContainer.innerHTML = '';
+        const historyItem = userHistory[currentQIndex];
+        
+        if (historyItem) {
+            isAnswered = true;
+            showFeedback(historyItem.isCorrect);
+            feedbackArea.classList.remove('hidden');
+        } else {
+            isAnswered = false;
+        }
+        
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = `btn-option w-full bg-white border-2 border-gray-200 text-gray-700 font-semibold py-4 px-2 rounded-xl flex justify-center items-center hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50`;
+            btn.innerHTML = opt.html;
+            
+            if (isAnswered) {
+                btn.disabled = true;
+                btn.classList.add('opacity-70', 'cursor-not-allowed');
+                const correctOption = q.options.find(o => o.id === 'correct');
+                
+                if (btn.innerHTML === correctOption.html) {
+                    if (historyItem && !historyItem.isCorrect) {
+                        btn.classList.remove('bg-white', 'border-gray-200');
+                        btn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                    } else if (historyItem && historyItem.isCorrect) {
+                        btn.classList.remove('bg-white', 'border-gray-200');
+                        btn.classList.add('bg-green-500', 'border-green-600', 'text-white', 'shadow-lg');
+                        btn.querySelectorAll('*').forEach(el => el.style.borderColor = "white");
+                    }
+                }
+                
+                if (historyItem && !historyItem.isCorrect && btn.innerHTML === historyItem.selectedHtml) {
+                     btn.classList.remove('bg-white', 'border-gray-200');
+                     btn.classList.add('bg-red-500', 'border-red-600', 'text-white');
+                     btn.querySelectorAll('*').forEach(el => el.style.borderColor = "white");
+                }
+            } else {
+                btn.onclick = () => handleAnswer(btn, opt);
+            }
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function showFeedback(isCorrect) {
+        const t = translations[currentLang];
+        if (isCorrect) {
+            feedbackText.textContent = t.feedbackCorrect;
+            feedbackText.className = "text-lg font-bold mb-4 text-green-600";
+        } else {
+            feedbackText.innerHTML = t.feedbackWrong;
+            feedbackText.className = "text-lg font-bold mb-4 text-red-600";
+        }
+    }
+
+    function handlePrev() {
+        if (currentQIndex > 0) {
+            currentQIndex--;
+            loadQuestion();
+        }
+    }
+
+    function handleAnswer(btn, selectedOption) {
+        if (isAnswered) return;
+        isAnswered = true;
+
+        const q = questions[currentQIndex];
+        const correctOption = q.options.find(o => o.id === 'correct');
+        const isCorrect = selectedOption.id === 'correct';
+
+        userHistory[currentQIndex] = {
+            p1: q.p1,
+            p2: q.p2,
+            selectedHtml: selectedOption.html,
+            correctHtml: correctOption.html,
+            isCorrect: isCorrect
+        };
+        
+        const allBtns = optionsContainer.querySelectorAll('button');
+        allBtns.forEach(b => {
+            b.disabled = true;
+            b.classList.add('opacity-70', 'cursor-not-allowed');
+            if (b.innerHTML === correctOption.html && !isCorrect) {
+                b.classList.remove('bg-white', 'border-gray-200');
+                b.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+            }
+        });
+
+        if (isCorrect) {
+            score++;
+            scoreEl.textContent = score;
+            btn.classList.remove('bg-white', 'border-gray-200');
+            btn.classList.add('bg-green-500', 'border-green-600', 'text-white', 'shadow-lg');
+            btn.querySelectorAll('*').forEach(el => el.style.borderColor = "white");
+        } else {
+            btn.classList.remove('bg-white', 'border-gray-200');
+            btn.classList.add('bg-red-500', 'border-red-600', 'text-white');
+            btn.querySelectorAll('*').forEach(el => el.style.borderColor = "white");
+        }
+
+        showFeedback(isCorrect);
+        feedbackArea.classList.remove('hidden');
+        feedbackArea.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+    function handleNext() {
+        currentQIndex++;
+        if (currentQIndex < questions.length) {
+            loadQuestion();
+        } else {
+            showSummary();
+        }
+    }
+
+    function showSummary() {
+        const t = translations[currentLang];
+        quizView.classList.add('hidden');
+        summaryView.classList.remove('hidden');
+        summaryView.classList.add('flex');
+        
+        document.getElementById('final-score').textContent = score;
+        document.getElementById('final-total').textContent = questions.length;
+        document.getElementById('score-display').style.display = 'none';
+
+        const list = document.getElementById('summary-list');
+        list.innerHTML = '';
+
+        userHistory.forEach((item, index) => {
+            const row = document.createElement('tr');
+            row.className = "summary-row border-b";
+            if (!item) return;
+
+            const pointsCell = `
+                <td class="px-4 py-3">
+                    <div class="font-semibold text-gray-700">Q${index + 1}</div>
+                    <div class="text-xs text-gray-500">
+                        (${item.p1[0]}, ${item.p1[1]}) & (${item.p2[0]}, ${item.p2[1]})
+                    </div>
+                </td>`;
+            
+            const answerCell = `
+                <td class="px-4 py-3">
+                    <div class="${item.isCorrect ? 'text-green-700' : 'text-red-700'} scale-75 origin-left">
+                        ${item.selectedHtml}
+                    </div>
+                    ${!item.isCorrect ? `<div class="text-xs text-gray-400 mt-1">${t.correctLabel}</div><div class="text-green-700 scale-75 origin-left">${item.correctHtml}</div>` : ''}
+                </td>`;
+
+            const statusCell = `
+                <td class="px-4 py-3 text-center">
+                    ${item.isCorrect 
+                        ? `<span class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full text-xs">${t.correctBadge}</span>` 
+                        : `<span class="px-2 py-1 font-semibold leading-tight text-red-700 bg-red-100 rounded-full text-xs">${t.wrongBadge}</span>`}
+                </td>`;
+
+            row.innerHTML = pointsCell + answerCell + statusCell;
+            list.appendChild(row);
+        });
+    }
+
+    // --- Canvas Drawing ---
+    function toCanvasX(x) { return centerX + (x * scale); }
+    function toCanvasY(y) { return centerY - (y * scale); }
+
+    function drawCoordinatePlane() {
+        ctx.clearRect(0, 0, width, height);
+        
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.lineWidth = 1;
+        for (let x = 0; x <= width; x += scale) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+        }
+        for (let y = 0; y <= height; y += scale) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+        }
+
+        ctx.strokeStyle = "#374151";
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, centerY); ctx.lineTo(width, centerY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(centerX, 0); ctx.lineTo(centerX, height); ctx.stroke();
+
+        ctx.font = "10px sans-serif";
+        ctx.fillStyle = "#9ca3af";
+        ctx.textAlign = "center";
+        
+        for(let i = -4; i <= 4; i++) {
+            if(i === 0) continue;
+            ctx.fillText(i, toCanvasX(i), centerY + 12);
+        }
+        ctx.textAlign = "right";
+        for(let i = -4; i <= 4; i++) {
+            if(i === 0) continue;
+            ctx.fillText(i, centerX - 4, toCanvasY(i) + 3);
+        }
+    }
+
+    function drawGraphLine(p1, p2) {
+        ctx.strokeStyle = "#4f46e5";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+
+        const x1 = p1[0], y1 = p1[1];
+        const x2 = p2[0], y2 = p2[1];
+
+        if (x1 === x2) {
+            ctx.moveTo(toCanvasX(x1), 0);
+            ctx.lineTo(toCanvasX(x1), height);
+        } else {
+            const m = (y2 - y1) / (x2 - x1);
+            const b = y1 - (m * x1);
+            ctx.moveTo(toCanvasX(-10), toCanvasY(m * -10 + b));
+            ctx.lineTo(toCanvasX(10), toCanvasY(m * 10 + b));
+        }
+        ctx.stroke();
+
+        ctx.fillStyle = "#ef4444";
+        [p1, p2].forEach(p => {
+            ctx.beginPath();
+            ctx.arc(toCanvasX(p[0]), toCanvasY(p[1]), 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(toCanvasX(p[0]), toCanvasY(p[1]), 2, 0, Math.PI * 2);
+            ctx.fillStyle = "white";
+            ctx.fill();
+            ctx.fillStyle = "#ef4444";
+        });
+    }
+
+    init();
+</script>
+</body>
+</html>
