@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distance Formula Quiz / 兩點距離測驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Nunito:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Nunito', 'Noto Sans TC', sans-serif;
+            touch-action: manipulation; /* Improves touch response */
+        }
+
+        /* Custom styling for the math formula rendering */
+        .math-formula {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+        }
+        
+        .radical {
+            font-size: 1.2em;
+            line-height: 1;
+            vertical-align: middle;
+            display: inline-block;
+        }
+
+        .radicand {
+            border-top: 2px solid currentColor;
+            padding-top: 1px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: -2px;
+            padding-left: 2px;
+        }
+
+        /* Choice button states */
+        .choice-btn {
+            transition: all 0.2s ease;
+        }
+        /* Hover effect only if not disabled (answered) */
+        .choice-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-color: #93c5fd;
+        }
+        
+        /* Specific states for feedback */
+        .choice-correct {
+            background-color: #dcfce7 !important; /* green-100 */
+            border-color: #16a34a !important; /* green-600 */
+            color: #166534 !important; /* green-800 */
+        }
+        
+        .choice-wrong {
+            background-color: #fee2e2 !important; /* red-100 */
+            border-color: #dc2626 !important; /* red-600 */
+            color: #991b1b !important; /* red-800 */
+            opacity: 1 !important;
+        }
+
+        .choice-dimmed {
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center py-6 px-4">
+
+    <!-- Language Toggle & Header -->
+    <div class="w-full max-w-4xl flex justify-between items-center mb-6">
+        <h1 class="text-xl md:text-2xl font-bold text-gray-800" id="app-title">Distance Formula Quiz</h1>
+        <button onclick="toggleLanguage()" class="bg-white px-4 py-2 rounded-lg shadow text-sm font-semibold hover:bg-gray-50 transition text-blue-600 border border-blue-100">
+            <span id="lang-btn-text">中文 / English</span>
+        </button>
+    </div>
+
+    <!-- Main Quiz Container -->
+    <div id="quiz-container" class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden hidden">
+        
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-200 h-2">
+            <div id="progress-bar" class="bg-blue-500 h-2 transition-all duration-300" style="width: 0%"></div>
+        </div>
+
+        <div class="p-6 md:p-8">
+            <!-- Question Info -->
+            <div class="flex justify-between items-end mb-4">
+                <span class="text-gray-500 font-medium text-sm" id="question-label">Question 1/10</span>
+                <!-- Running Score or Feedback Status could go here -->
+                <span id="feedback-text" class="font-bold text-lg"></span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Left Column: Graph -->
+                <div class="flex flex-col items-center">
+                    <div class="bg-white border-2 border-gray-100 rounded-xl shadow-inner p-1 w-full max-w-[400px] aspect-square relative">
+                        <canvas id="graphCanvas" width="400" height="400" class="w-full h-full rounded-lg"></canvas>
+                    </div>
+                    <div class="mt-4 text-center p-3 bg-blue-50 rounded-lg w-full">
+                        <p class="text-lg text-gray-800">
+                            <span class="font-bold text-red-500">A</span> (<span id="coord-a"></span>) 
+                            &nbsp;&nbsp;|&nbsp;&nbsp; 
+                            <span class="font-bold text-blue-500">B</span> (<span id="coord-b"></span>)
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right Column: Question & Choices -->
+                <div class="flex flex-col justify-center">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6" id="question-text">
+                        Which formula correctly calculates the distance between point A and point B?
+                    </h2>
+
+                    <div id="choices-container" class="grid grid-cols-1 gap-4">
+                        <!-- Choices injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Footer -->
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-between items-center">
+            <button id="prev-btn" onclick="prevQuestion()" class="w-32 py-3 rounded-lg font-bold text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                <span class="lang-prev">Previous</span>
+            </button>
+            <button id="next-btn" onclick="nextQuestion()" class="w-32 py-3 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 transition">
+                <span class="lang-next">Next</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary / Results Screen -->
+    <div id="summary-container" class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden hidden">
+        <div class="p-8 text-center bg-blue-600">
+            <h2 class="text-3xl font-bold text-white mb-2 lang-completed">Quiz Completed!</h2>
+            <p class="text-blue-100 text-lg"><span class="lang-score-label">Your Score:</span> <span id="final-score" class="font-bold text-2xl bg-white text-blue-600 px-3 py-1 rounded-lg ml-2"></span></p>
+        </div>
+        
+        <div class="p-6 bg-gray-50 max-h-[60vh] overflow-y-auto">
+            <div id="summary-list" class="space-y-4">
+                <!-- Summary items injected here -->
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 bg-white flex justify-center">
+            <button onclick="startQuiz()" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow hover:bg-blue-700 transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                </svg>
+                <span class="lang-retry">Try New Questions</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration & State ---
+        const BANK_SIZE = 50;
+        const QUESTIONS_PER_SESSION = 10;
+        let questionBank = [];
+        let currentQuizQuestions = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = new Array(QUESTIONS_PER_SESSION).fill(null); // Stores index of selected choice
+        let currentLang = 'en';
+
+        // --- Translations ---
+        const i18n = {
+            en: {
+                title: "Distance Formula Quiz",
+                questionLabel: "Question",
+                questionText: "Which expression correctly represents the distance between A and B?",
+                prev: "Previous",
+                next: "Next",
+                finish: "Finish",
+                completed: "Quiz Completed!",
+                scoreLabel: "Your Score:",
+                retry: "Try New Questions",
+                yourAns: "Your Answer:",
+                correctAns: "Correct Answer:",
+                correct: "Correct!",
+                incorrect: "Incorrect",
+                summaryTitle: "Performance Summary",
+                selectPrompt: "Please select an answer."
+            },
+            zh: {
+                title: "兩點距離測驗",
+                questionLabel: "題目",
+                questionText: "下列哪一項正確表示 A 點和 B 點之間的距離？",
+                prev: "上一題",
+                next: "下一題",
+                finish: "完成",
+                completed: "測驗完成！",
+                scoreLabel: "你的分數：",
+                retry: "嘗試新題目",
+                yourAns: "你的答案：",
+                correctAns: "正確答案：",
+                correct: "答對！",
+                incorrect: "答錯",
+                summaryTitle: "成績總結",
+                selectPrompt: "請選擇一個答案。"
+            }
+        };
+
+        // --- Question Generation Logic ---
+        
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateQuestionBank() {
+            const bank = [];
+            while (bank.length < BANK_SIZE) {
+                let x1 = getRandomInt(-8, 8);
+                let y1 = getRandomInt(-8, 8);
+                let x2 = getRandomInt(-8, 8);
+                let y2 = getRandomInt(-8, 8);
+
+                if (x1 === x2 && y1 === y2) continue;
+                if (Math.abs(x1 - x2) < 2 && Math.abs(y1 - y2) < 2) continue;
+
+                let key = `${x1},${y1}-${x2},${y2}`;
+                if (bank.some(q => q.key === key)) continue;
+
+                bank.push(createQuestionObj(x1, y1, x2, y2, key));
+            }
+            return bank;
+        }
+
+        function createQuestionObj(x1, y1, x2, y2, key) {
+            const fmt = (n) => n < 0 ? `(${n})` : `${n}`;
+            
+            // Generate Choices
+            const correctHTML = generateFormulaHTML(x2, x1, y2, y1, true, true);
+            const dist1HTML = generateFormulaHTML(x2, x1, y2, y1, false, true); 
+            const dist2HTML = `
+                <span class="radical">&radic;</span><span class="radicand">
+                (${fmt(x2)} - ${fmt(y2)})² + (${fmt(x1)} - ${fmt(y1)})²
+                </span>`;
+            const dist3HTML = `
+                <span class="radical">&radic;</span><span class="radicand">
+                (${fmt(x2)} - ${fmt(x1)}) + (${fmt(y2)} - ${fmt(y1)})
+                </span>`;
+
+            let choices = [
+                { html: correctHTML, isCorrect: true },
+                { html: dist1HTML, isCorrect: false },
+                { html: dist2HTML, isCorrect: false },
+                { html: dist3HTML, isCorrect: false }
+            ];
+
+            choices = choices.sort(() => Math.random() - 0.5);
+
+            return {
+                points: { A: {x: x1, y: y1}, B: {x: x2, y: y2} },
+                key: key,
+                choices: choices
+            };
+        }
+
+        function generateFormulaHTML(v1, v2, v3, v4, isMinus, isSquared) {
+            const fmt = (n) => n < 0 ? `(${n})` : `${n}`;
+            const op = isMinus ? '-' : '+';
+            const sq = isSquared ? '²' : '';
+            return `
+                <span class="radical">&radic;</span><span class="radicand">
+                (${fmt(v1)} ${op} ${fmt(v2)})${sq} + (${fmt(v3)} ${op} ${fmt(v4)})${sq}
+                </span>
+            `;
+        }
+
+        // --- Core Quiz Logic ---
+
+        function init() {
+            questionBank = generateQuestionBank();
+            startQuiz();
+        }
+
+        function startQuiz() {
+            let shuffled = [...questionBank].sort(() => Math.random() - 0.5);
+            currentQuizQuestions = shuffled.slice(0, QUESTIONS_PER_SESSION);
+            
+            currentQuestionIndex = 0;
+            userAnswers = new Array(QUESTIONS_PER_SESSION).fill(null);
+            
+            document.getElementById('quiz-container').classList.remove('hidden');
+            document.getElementById('summary-container').classList.add('hidden');
+            
+            loadQuestion(0);
+        }
+
+        function loadQuestion(index) {
+            const q = currentQuizQuestions[index];
+            const texts = i18n[currentLang];
+            
+            document.getElementById('question-label').innerText = `${texts.questionLabel} ${index + 1}/${QUESTIONS_PER_SESSION}`;
+            document.getElementById('question-text').innerText = texts.questionText;
+            document.getElementById('coord-a').innerText = `${q.points.A.x}, ${q.points.A.y}`;
+            document.getElementById('coord-b').innerText = `${q.points.B.x}, ${q.points.B.y}`;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.disabled = index === 0;
+            
+            if (index === QUESTIONS_PER_SESSION - 1) {
+                nextBtn.querySelector('span').innerText = texts.finish;
+                nextBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                nextBtn.classList.add('bg-green-600', 'hover:bg-green-700', 'shadow-green-200');
+            } else {
+                nextBtn.querySelector('span').innerText = texts.next;
+                nextBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                nextBtn.classList.remove('bg-green-600', 'hover:bg-green-700', 'shadow-green-200');
+            }
+
+            const progress = ((index) / QUESTIONS_PER_SESSION) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+
+            drawGraph(q.points.A, q.points.B);
+            renderChoices();
+        }
+
+        function renderChoices() {
+            const container = document.getElementById('choices-container');
+            container.innerHTML = '';
+            
+            const q = currentQuizQuestions[currentQuestionIndex];
+            const answerIdx = userAnswers[currentQuestionIndex];
+            const isAnswered = answerIdx !== null;
+            const texts = i18n[currentLang];
+
+            // Feedback Text Update
+            const feedbackEl = document.getElementById('feedback-text');
+            if (isAnswered) {
+                const isCorrect = q.choices[answerIdx].isCorrect;
+                feedbackEl.innerText = isCorrect ? texts.correct : texts.incorrect;
+                feedbackEl.className = `font-bold text-lg ${isCorrect ? 'text-green-600' : 'text-red-500'}`;
+            } else {
+                feedbackEl.innerText = "";
+            }
+
+            q.choices.forEach((choice, i) => {
+                const btn = document.createElement('button');
+                // Base classes
+                let classes = "choice-btn w-full p-4 text-left border-2 rounded-xl flex items-center bg-white border-gray-200 text-gray-700";
+                
+                // --- Logic for styling choices based on state ---
+                if (isAnswered) {
+                    btn.disabled = true; // Lock all buttons
+                    
+                    if (choice.isCorrect) {
+                        // Always highlight the correct answer in Green
+                        classes += " choice-correct";
+                    } else if (i === answerIdx && !choice.isCorrect) {
+                        // Highlight selected wrong answer in Red
+                        classes += " choice-wrong";
+                    } else {
+                        // Dim others
+                        classes += " choice-dimmed";
+                    }
+                } else {
+                    // Normal state
+                    classes += " hover:border-blue-300";
+                }
+
+                btn.className = classes;
+
+                // Icons for feedback
+                let iconHTML = `<div class="w-8 h-8 rounded-full border-2 border-current mr-4 flex items-center justify-center font-bold text-sm opacity-50 flex-shrink-0">${String.fromCharCode(65 + i)}</div>`;
+                
+                if (isAnswered) {
+                    if (choice.isCorrect) {
+                        iconHTML = `<div class="w-8 h-8 rounded-full bg-green-200 text-green-700 mr-4 flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>`;
+                    } else if (i === answerIdx && !choice.isCorrect) {
+                        iconHTML = `<div class="w-8 h-8 rounded-full bg-red-200 text-red-700 mr-4 flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></div>`;
+                    }
+                }
+
+                btn.innerHTML = `
+                    ${iconHTML}
+                    <div class="text-lg math-formula pointer-events-none">
+                        ${choice.html}
+                    </div>
+                `;
+                
+                // Only allow click if not answered
+                if (!isAnswered) {
+                    btn.onclick = () => selectAnswer(i);
+                }
+                
+                container.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(choiceIndex) {
+            // Prevent changing answer if already set
+            if (userAnswers[currentQuestionIndex] !== null) return;
+
+            userAnswers[currentQuestionIndex] = choiceIndex;
+            
+            // Immediately re-render to show feedback
+            renderChoices();
+        }
+
+        function nextQuestion() {
+            // Validation: Must select an answer before proceeding
+            if (userAnswers[currentQuestionIndex] === null) {
+                alert(i18n[currentLang].selectPrompt);
+                return;
+            }
+
+            if (currentQuestionIndex < QUESTIONS_PER_SESSION - 1) {
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+            } else {
+                showSummary();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion(currentQuestionIndex);
+            }
+        }
+
+        // --- Canvas Drawing Logic (Unchanged) ---
+        function drawGraph(pA, pB) {
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const gridSize = 20;
+            const unit = width / gridSize;
+            const originX = width / 2;
+            const originY = height / 2;
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#fcfcfc';
+            ctx.fillRect(0,0,width,height);
+
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let i = 0; i <= gridSize; i++) {
+                ctx.moveTo(i * unit, 0);
+                ctx.lineTo(i * unit, height);
+                ctx.moveTo(0, i * unit);
+                ctx.lineTo(width, i * unit);
+            }
+            ctx.stroke();
+
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, originY);
+            ctx.lineTo(width, originY);
+            ctx.moveTo(originX, 0);
+            ctx.lineTo(originX, height);
+            ctx.stroke();
+
+            const toPixel = (x, y) => {
+                return {
+                    x: originX + (x * unit),
+                    y: originY - (y * unit)
+                };
+            };
+
+            const pixelA = toPixel(pA.x, pA.y);
+            const pixelB = toPixel(pB.x, pB.y);
+
+            ctx.strokeStyle = '#93c5fd';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(pixelA.x, pixelA.y);
+            ctx.lineTo(pixelB.x, pixelB.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            const drawPoint = (p, label, color) => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 6, 0, 2 * Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#1f2937';
+                ctx.font = 'bold 16px Nunito';
+                ctx.fillText(label, p.x + 10, p.y - 10);
+            };
+
+            drawPoint(pixelA, "A", '#ef4444');
+            drawPoint(pixelB, "B", '#3b82f6');
+        }
+
+        // --- Summary & Logic ---
+        function showSummary() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('summary-container').classList.remove('hidden');
+
+            const texts = i18n[currentLang];
+            const list = document.getElementById('summary-list');
+            list.innerHTML = '';
+            
+            let score = 0;
+
+            currentQuizQuestions.forEach((q, index) => {
+                const userChoiceIdx = userAnswers[index];
+                const choices = q.choices;
+                const isCorrect = choices[userChoiceIdx].isCorrect;
+                if (isCorrect) score++;
+
+                const correctChoiceIdx = choices.findIndex(c => c.isCorrect);
+
+                const item = document.createElement('div');
+                item.className = `p-4 rounded-lg border-l-4 ${isCorrect ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'} shadow-sm`;
+                
+                const statusText = isCorrect ? `<span class="text-green-600 font-bold">✓ ${texts.correct}</span>` : `<span class="text-red-600 font-bold">✗ ${texts.incorrect}</span>`;
+
+                item.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-gray-700">${texts.questionLabel} ${index + 1}: A(${q.points.A.x}, ${q.points.A.y}) ↔ B(${q.points.B.x}, ${q.points.B.y})</h3>
+                        ${statusText}
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 text-sm">
+                        <div class="p-2 bg-white rounded border border-gray-200">
+                            <span class="block text-gray-500 text-xs uppercase tracking-wide mb-1">${texts.yourAns}</span>
+                            <div class="math-formula">${choices[userChoiceIdx].html}</div>
+                        </div>
+                        ${!isCorrect ? `
+                        <div class="p-2 bg-white rounded border border-gray-200">
+                            <span class="block text-gray-500 text-xs uppercase tracking-wide mb-1">${texts.correctAns}</span>
+                            <div class="math-formula">${choices[correctChoiceIdx].html}</div>
+                        </div>` : ''}
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+
+            document.getElementById('final-score').innerText = `${score} / ${QUESTIONS_PER_SESSION}`;
+            
+            document.querySelector('.lang-completed').innerText = texts.completed;
+            document.querySelector('.lang-score-label').innerText = texts.scoreLabel;
+            document.querySelector('.lang-retry').innerText = texts.retry;
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            
+            const texts = i18n[currentLang];
+            document.getElementById('app-title').innerText = texts.title;
+            document.getElementById('question-text').innerText = texts.questionText;
+            
+            document.querySelectorAll('.lang-prev').forEach(el => el.innerText = texts.prev);
+            
+            const nextBtnText = document.querySelector('#next-btn span');
+            if (currentQuestionIndex === QUESTIONS_PER_SESSION - 1) {
+                nextBtnText.innerText = texts.finish;
+            } else {
+                nextBtnText.innerText = texts.next;
+            }
+
+            document.getElementById('question-label').innerText = `${texts.questionLabel} ${currentQuestionIndex + 1}/${QUESTIONS_PER_SESSION}`;
+
+            // Re-render choices to update any lang specific feedback text if visible
+            if (!document.getElementById('quiz-container').classList.contains('hidden')) {
+                renderChoices();
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
