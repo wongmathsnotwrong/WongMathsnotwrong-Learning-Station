@@ -328,13 +328,34 @@
                 html: makeFrac(`${y2} + ${y1 < 0 ? `(${y1})` : y1}`, `${x2} + ${x1 < 0 ? `(${x1})` : x1}`, addVal)
             };
 
-            // 4. Distractor: Sign flip in denominator
-            const signFlipVal = simplifyFraction(dy, -dx);
-            const wrong3 = {
-                id: 'wrong3',
-                html: makeFrac(`${y2} - ${y1 < 0 ? `(${y1})` : y1}`, `${x1} - ${x2 < 0 ? `(${x2})` : x2}`, signFlipVal)
-            };
+            // 4. Distractor: Sign flip in denominator (or different logic for vertical lines)
+            let wrong3;
+            if (x1 === x2) {
+                // Vertical line case: Switching order x1-x2 vs x2-x1 results in duplicate "0".
+                // So we use a different error type: e.g. accidental addition in denominator
+                const valMixed = simplifyFraction(dy, x2 + x1);
+                wrong3 = {
+                    id: 'wrong3',
+                    html: makeFrac(`${y2} - ${y1 < 0 ? `(${y1})` : y1}`, `${x2} + ${x1 < 0 ? `(${x1})` : x1}`, valMixed)
+                };
+            } else {
+                const signFlipVal = simplifyFraction(dy, -dx);
+                wrong3 = {
+                    id: 'wrong3',
+                    html: makeFrac(`${y2} - ${y1 < 0 ? `(${y1})` : y1}`, `${x1} - ${x2 < 0 ? `(${x2})` : x2}`, signFlipVal)
+                };
+            }
             
+            // --- CRITICAL DUPLICATE CHECK ---
+            // Ensure no two options look the same
+            const uniqueHtml = new Set();
+            uniqueHtml.add(correctOpt.html);
+            if (uniqueHtml.has(wrong1.html)) return false;
+            uniqueHtml.add(wrong1.html);
+            if (uniqueHtml.has(wrong2.html)) return false;
+            uniqueHtml.add(wrong2.html);
+            if (uniqueHtml.has(wrong3.html)) return false;
+
             const options = [correctOpt, wrong1, wrong2, wrong3];
             // Shuffle
             for (let i = options.length - 1; i > 0; i--) {
@@ -358,7 +379,10 @@
         // 1. Generate 25 Same-Quadrant Questions (Modified from 6)
         let sameCount = 0;
         let quadCycle = 1;
-        while (sameCount < 25) {
+        // Limit attempts to prevent infinite loop if strict filtering rejects too many
+        let attempts = 0;
+        while (sameCount < 25 && attempts < 500) {
+            attempts++;
             const q = quadCycle;
             const xSign = (q === 2 || q === 3) ? -1 : 1;
             const ySign = (q === 3 || q === 4) ? -1 : 1;
@@ -375,7 +399,9 @@
         }
 
         // 2. Generate remaining (25) Different-Quadrant Questions
-        while (bank.length < count) {
+        attempts = 0;
+        while (bank.length < count && attempts < 1000) {
+            attempts++;
             const x1 = Math.floor(Math.random() * 9) - 4;
             const y1 = Math.floor(Math.random() * 9) - 4;
             const x2 = Math.floor(Math.random() * 9) - 4;
@@ -425,7 +451,10 @@
     // --- Initialization ---
     function init() {
         fullQuestionBank = generateQuestionBank(50);
-        questions = getRandomSubarray(fullQuestionBank, QUIZ_LENGTH);
+        // Fallback if we couldn't generate enough valid questions
+        const quizSize = Math.min(fullQuestionBank.length, QUIZ_LENGTH);
+        
+        questions = getRandomSubarray(fullQuestionBank, quizSize);
         totalEl.textContent = questions.length;
         userHistory = new Array(questions.length).fill(null);
         
