@@ -66,23 +66,6 @@
             75% { transform: translateX(5px); }
         }
 
-        /* Modal Styles */
-        .modal-backdrop {
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        
-        .loading-dots:after {
-            content: '.';
-            animation: dots 1.5s steps(5, end) infinite;
-        }
-        
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60% { content: '...'; }
-            80%, 100% { content: ''; }
-        }
-
         /* Scrollbar styling for webkit */
         ::-webkit-scrollbar {
             width: 8px;
@@ -102,7 +85,6 @@
 <body class="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4">
 
     <!-- App Container -->
-    <!-- Changed to max-h-[90vh] and overflow-y-auto to allow internal scrolling on small screens -->
     <div id="app" class="w-full max-w-2xl bg-white rounded-2xl shadow-xl flex flex-col relative border border-slate-200 max-h-[90vh] overflow-hidden">
         
         <!-- Header -->
@@ -178,19 +160,6 @@
                     <span id="feedback-text"></span>
                 </div>
                 
-                <div id="ai-actions" class="hidden w-full flex flex-col gap-2 animate-fade-in shrink-0">
-                    <div class="grid grid-cols-2 gap-2">
-                        <button id="btn-explain" onclick="quizApp.explainFormula()" class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-2 px-4 rounded-lg font-bold hover:from-purple-600 hover:to-indigo-700 transition shadow-sm text-sm flex items-center justify-center gap-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span>Explain with AI ✨</span>
-                        </button>
-                        <button id="btn-challenge" onclick="quizApp.generateProblem()" class="bg-gradient-to-r from-amber-500 to-orange-600 text-white py-2 px-4 rounded-lg font-bold hover:from-amber-600 hover:to-orange-700 transition shadow-sm text-sm flex items-center justify-center gap-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                            <span>Challenge Me ✨</span>
-                        </button>
-                    </div>
-                </div>
-
                 <div class="flex gap-3 w-full mt-2 shrink-0 pb-4">
                     <button id="prev-btn" onclick="quizApp.prevQuestion()" class="hidden flex-1 bg-slate-200 text-slate-700 py-3 rounded-lg font-bold hover:bg-slate-300 transition shadow-sm">
                         Previous
@@ -233,35 +202,8 @@
         </main>
     </div>
 
-    <!-- AI Modal -->
-    <div id="ai-modal" class="fixed inset-0 modal-backdrop hidden flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all scale-95 opacity-0 flex flex-col max-h-[85vh]" id="ai-modal-content">
-            <div class="bg-indigo-600 p-4 flex justify-between items-center text-white shrink-0">
-                <h3 id="modal-title" class="font-bold text-lg flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                    Gemini AI Tutor
-                </h3>
-                <button onclick="quizApp.closeModal()" class="hover:bg-indigo-700 rounded-full p-1 transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto">
-                <div id="ai-loading" class="hidden flex flex-col items-center justify-center py-8 text-slate-500">
-                    <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                    <p id="loading-text" class="loading-dots">Thinking</p>
-                </div>
-                <div id="ai-response" class="text-slate-700 text-lg leading-relaxed whitespace-pre-wrap"></div>
-            </div>
-            <div class="p-4 bg-slate-50 border-t border-slate-100 text-right shrink-0">
-                <button id="modal-close" onclick="quizApp.closeModal()" class="bg-slate-800 text-white px-4 py-2 rounded-lg font-bold hover:bg-slate-900 transition text-sm">Close</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Script -->
     <script>
-        const apiKey = ""; 
-
         // --- Translations ---
         const translations = {
             en: {
@@ -282,14 +224,7 @@
                 resPrint: "Print Results",
                 feedbackCorrect: "Correct!",
                 feedbackWrong: "Incorrect. The correct answer is highlighted.",
-                btnExplain: "Explain with AI ✨",
-                btnChallenge: "Challenge Me ✨",
-                modalTitle: "Gemini AI Tutor",
-                modalClose: "Close",
-                loading: "Thinking",
                 langBtn: "中文", // Button shows target language
-                aiPromptExplain: "You are a friendly and clear math tutor. Explain this formula. Break down variables. Keep it under 100 words. Language: English.",
-                aiPromptChallenge: "Create a fun, real-world word problem for this formula. Do not provide solution immediately. Provide Answer at the end. Language: English."
             },
             zh: {
                 title: "幾何公式測驗",
@@ -309,40 +244,9 @@
                 resPrint: "列印結果",
                 feedbackCorrect: "正確！",
                 feedbackWrong: "不正確。正確答案已標示。",
-                btnExplain: "AI 解說 ✨",
-                btnChallenge: "考考我 ✨",
-                modalTitle: "Gemini AI 導師",
-                modalClose: "關閉",
-                loading: "思考中...",
                 langBtn: "English",
-                aiPromptExplain: "你是一位友善的數學導師。請用繁體中文解釋這個公式，並說明變量的意義。保持簡潔，100字以內。",
-                aiPromptChallenge: "請用繁體中文出一個關於此公式的有趣應用題。不要立刻提供解答，請在最後才附上答案。"
             }
         };
-
-        async function callGemini(prompt) {
-            if (!apiKey) return "API Key is missing.";
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const payload = { contents: [{ parts: [{ text: prompt }] }] };
-
-            let retries = 0;
-            while (retries <= 3) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-                    const data = await response.json();
-                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
-                } catch (error) {
-                    retries++;
-                    if (retries > 3) return "Sorry, I couldn't reach the AI tutor right now.";
-                    await new Promise(r => setTimeout(r, 1000 * retries));
-                }
-            }
-        }
 
         // Data Structure for Shapes with bilingual support
         const quizData = [
@@ -544,9 +448,6 @@
                     progressContainer: document.getElementById('progress-container'),
                     feedbackArea: document.getElementById('feedback-area'),
                     feedbackText: document.getElementById('feedback-text'),
-                    aiActions: document.getElementById('ai-actions'),
-                    btnExplainSpan: document.querySelector('#btn-explain span'),
-                    btnChallengeSpan: document.querySelector('#btn-challenge span'),
                     prevBtn: document.getElementById('prev-btn'),
                     nextBtn: document.getElementById('next-btn'),
                     
@@ -558,14 +459,6 @@
                     resPrint: document.getElementById('res-print'),
                     finalScore: document.getElementById('final-score'),
                     scoreCircle: document.getElementById('score-circle'),
-                    
-                    aiModal: document.getElementById('ai-modal'),
-                    modalTitle: document.getElementById('modal-title'),
-                    modalClose: document.getElementById('modal-close'),
-                    loadingText: document.getElementById('loading-text'),
-                    aiModalContent: document.getElementById('ai-modal-content'),
-                    aiLoading: document.getElementById('ai-loading'),
-                    aiResponse: document.getElementById('ai-response')
                 };
             }
 
@@ -598,18 +491,12 @@
                 
                 this.ui.prevBtn.textContent = t.btnPrev;
                 this.ui.nextBtn.textContent = t.btnNext;
-                this.ui.btnExplainSpan.textContent = t.btnExplain;
-                this.ui.btnChallengeSpan.textContent = t.btnChallenge;
                 
                 this.ui.resTitle.textContent = t.resTitle;
                 this.ui.resMsg.textContent = t.resMsg;
                 this.ui.resPoints.textContent = t.resPoints;
                 this.ui.resRetry.textContent = t.resRetry;
                 this.ui.resPrint.textContent = t.resPrint;
-                
-                this.ui.modalTitle.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg> ${t.modalTitle}`;
-                this.ui.modalClose.textContent = t.modalClose;
-                this.ui.loadingText.textContent = t.loading;
             }
 
             startQuiz() {
@@ -651,7 +538,6 @@
 
                 this.ui.feedbackArea.classList.add('hidden');
                 this.ui.feedbackArea.classList.remove('correct-anim', 'wrong-anim');
-                this.ui.aiActions.classList.add('hidden');
                 
                 // Nav Buttons
                 if (this.state.currentQuestionIndex > 0) {
@@ -699,7 +585,6 @@
                     } else {
                         this.showFeedback(false, t.feedbackWrong);
                     }
-                    this.ui.aiActions.classList.remove('hidden');
                 }
 
                 if (window.MathJax) {
@@ -739,7 +624,6 @@
                 }
 
                 this.ui.nextBtn.classList.remove('hidden');
-                this.ui.aiActions.classList.remove('hidden');
             }
 
             showFeedback(isCorrect, text) {
@@ -795,62 +679,6 @@
 
             restartQuiz() {
                 this.startQuiz();
-            }
-
-            // --- AI Features ---
-
-            openModal() {
-                this.ui.aiModal.classList.remove('hidden');
-                void this.ui.aiModal.offsetWidth; 
-                this.ui.aiModalContent.classList.remove('scale-95', 'opacity-0');
-                this.ui.aiModalContent.classList.add('scale-100', 'opacity-100');
-            }
-
-            closeModal() {
-                this.ui.aiModalContent.classList.remove('scale-100', 'opacity-100');
-                this.ui.aiModalContent.classList.add('scale-95', 'opacity-0');
-                setTimeout(() => {
-                    this.ui.aiModal.classList.add('hidden');
-                    this.ui.aiResponse.innerHTML = '';
-                }, 200);
-            }
-
-            async explainFormula() {
-                const q = this.state.questions[this.state.currentQuestionIndex];
-                const t = translations[this.state.lang];
-                this.openModal();
-                this.ui.aiLoading.classList.remove('hidden');
-                this.ui.aiResponse.classList.add('hidden');
-                
-                // Use English raw names to assist AI, but request localized output
-                const prompt = `${t.aiPromptExplain}
-                Formula: ${q.rawCorrect}
-                Shape: ${q.name.en}
-                Variables: ${q.variables[this.state.lang]}`;
-
-                const text = await callGemini(prompt);
-                
-                this.ui.aiLoading.classList.add('hidden');
-                this.ui.aiResponse.textContent = text;
-                this.ui.aiResponse.classList.remove('hidden');
-            }
-
-            async generateProblem() {
-                const q = this.state.questions[this.state.currentQuestionIndex];
-                const t = translations[this.state.lang];
-                this.openModal();
-                this.ui.aiLoading.classList.remove('hidden');
-                this.ui.aiResponse.classList.add('hidden');
-
-                const prompt = `${t.aiPromptChallenge}
-                Shape: ${q.name.en}
-                Formula: ${q.rawCorrect}`;
-
-                const text = await callGemini(prompt);
-                
-                this.ui.aiLoading.classList.add('hidden');
-                this.ui.aiResponse.textContent = text;
-                this.ui.aiResponse.classList.remove('hidden');
             }
         }
 
